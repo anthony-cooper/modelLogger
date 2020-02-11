@@ -1,5 +1,6 @@
 import os.path as path #Used for path commands
 import pathlib #Used to rseolve relative paths; Requires python 3.4
+from datetime import datetime #Used to format date/times
 
 #0. (Optional) Parse an IEF to generate 1.
 
@@ -49,6 +50,7 @@ def genLogItem(textLine,workingFolder,homePath):
     fileType = ''
     filePaths = ''
     fileNotes = ''
+    fileTime = ''
     loggedItems = []
     if textLine[0].casefold()=='READ'.casefold():
         s=1
@@ -79,7 +81,11 @@ def genLogItem(textLine,workingFolder,homePath):
     fileNotes = fileNotes.strip()
     for filePath in filePaths.split('|'):
         filePath = resolveFilePath(filePath.strip(),workingFolder,homePath)
-        loggedItems.append((fileType,filePath,fileNotes))
+        try:
+            fileTime = str(datetime.fromtimestamp(path.getmtime(path.join(homePath,filePath))).strftime('%d/%m/%Y %H:%M:%S'))
+        except:
+            fileTime = 'File Missing'
+        loggedItems.append((fileType,filePath,fileNotes,fileTime))
         if not textLine[1].casefold() == 'GIS'.casefold():
             break
     return loggedItems
