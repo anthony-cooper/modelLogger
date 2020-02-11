@@ -48,6 +48,7 @@ def tuflowTextAssessment(textBlock,workingFolder,homePath):
 def genLogItem(textLine,workingFolder,homePath):
     fileType = ''
     filePaths = ''
+    fileNotes = ''
     loggedItems = []
     if textLine[0].casefold()=='READ'.casefold():
         s=1
@@ -58,15 +59,22 @@ def genLogItem(textLine,workingFolder,homePath):
             fileType = ' '.join(textLine[s:i])
             for j in range(i+1,len(textLine)):
                 if textLine[j][0] == '!':
+                    try: # Used to prevent failure if notes fail to load
+                        fileNotes = ' '.join(textLine[j+1:])
+                    except:
+                        pass
                     break
                 else:
                     if filePaths != '':
                         filePaths = filePaths + ' ' + str(textLine[j])
                     else:
                         filePaths = filePaths + str(textLine[j])
+    if '|' in filePaths:
+            fileNotes = 'Read as ' + str(filePaths.count('|')+1) + ' part group. '
+    fileNotes = fileNotes.strip()
     for filePath in filePaths.split('|'):
         filePath = resolveFilePath(filePath.strip(),workingFolder,homePath)
-        loggedItems.append((fileType,filePath))
+        loggedItems.append((fileType,filePath,fileNotes))
     return loggedItems
 
 
