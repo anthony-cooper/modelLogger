@@ -1,4 +1,5 @@
-import os #Used for path commands
+import os.path as path #Used for path commands
+import pathlib #Used to rseolve relative paths; Requires python 3.4
 
 #0. (Optional) Parse an IEF to generate 1.
 
@@ -6,7 +7,7 @@ import os #Used for path commands
 #1. Provide a tcf file path
 tcfFile = 'FloodModel_~s1~_~e1~.tcf'
 tcfPath = r'C:\DevArea\TestModel\Runs'
-homePath = r'C:\DevArea'
+homePath = r'C:\DevArea\TestModel'
 #1a. (Optional)Provide a list of events
 
 #1b. (Optional) Provide a list of scenarios
@@ -23,7 +24,7 @@ def tuflowFileAssessment(textFile,homePath):
     file.close
     #3a. Split file into blocks by assessing IF, ELSE and END as first values
     textBlock = splitFile
-    workingFolder=os.path.dirname(textFile)
+    workingFolder=path.dirname(textFile)
 
     loggedItems.extend(tuflowTextAssessment(textBlock,workingFolder,homePath))
     for loggedItem in loggedItems:
@@ -36,6 +37,11 @@ def tuflowTextAssessment(textBlock,workingFolder,homePath):
         if textLine:
             if textLine[0].casefold()  == 'READ'.casefold():
                 loggedItems.append(genLogItem(textLine,workingFolder,homePath))
+            else:
+                try:
+                    print(str.join(textLine[3:]))
+                except:
+                    pass
     return loggedItems
 
 
@@ -53,9 +59,13 @@ def genLogItem(textLine,workingFolder,homePath):
                         filePath = filePath + ' ' + str(textLine[j])
                     else:
                         filePath = filePath + str(textLine[j])
-            filePath = os.path.join(workingFolder + filePath)
-            filePath = os.path.abspath(os.path.realpath(filePath))
-            filePath = os.path.relpath(filePath, start = homePath)
+
+            if not path.isabs(filePath):
+                filePath = path.join(workingFolder +'\\'+ filePath)
+                print(filePath)
+                filePath = pathlib.Path(filePath).resolve()
+                print(filePath)
+            filePath = path.relpath(filePath, start = homePath)
     return (fileType,filePath)
 
-tuflowFileAssessment(os.path.join(tcfPath,tcfFile),homePath)
+tuflowFileAssessment(path.join(tcfPath,tcfFile),homePath)
