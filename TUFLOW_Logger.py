@@ -60,7 +60,8 @@ def genLogItem(textLine,workingFolder,homePath):
             for j in range(i+1,len(textLine)):
                 if textLine[j][0] == '!':
                     try: # Used to prevent failure if notes fail to load
-                        fileNotes = ' '.join(textLine[j+1:])
+                        fileNotes = ' '.join(textLine[j:])
+                        fileNotes = fileNotes[1:]
                     except:
                         pass
                     break
@@ -70,11 +71,17 @@ def genLogItem(textLine,workingFolder,homePath):
                     else:
                         filePaths = filePaths + str(textLine[j])
     if '|' in filePaths:
-            fileNotes = 'Read as ' + str(filePaths.count('|')+1) + ' part group. '
+            if textLine[1].casefold() == 'GIS'.casefold():
+                fileNotes = '*Read as ' + str(filePaths.count('|')+1) + ' part group.* ' + fileNotes
+            elif textLine[1].casefold() == 'Materials'.casefold():
+                fileNotes = '*Multiplier of ' + str(filePaths.split('|')[1]) + ' applied.* ' + fileNotes
+
     fileNotes = fileNotes.strip()
     for filePath in filePaths.split('|'):
         filePath = resolveFilePath(filePath.strip(),workingFolder,homePath)
         loggedItems.append((fileType,filePath,fileNotes))
+        if not textLine[1].casefold() == 'GIS'.casefold():
+            break
     return loggedItems
 
 
