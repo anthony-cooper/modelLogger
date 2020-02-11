@@ -27,45 +27,56 @@ def tuflowFileAssessment(textFile,homePath):
     workingFolder=path.dirname(textFile)
 
     loggedItems.extend(tuflowTextAssessment(textBlock,workingFolder,homePath))
-    for loggedItem in loggedItems:
-        print(loggedItem)
+    return loggedItems
 
 def tuflowTextAssessment(textBlock,workingFolder,homePath):
     loggedItems=[]
     #4. Take list of lists (lines split into words) and handle
     for textLine in textBlock:
-        if textLine:
+        try: #Catch errors from short lines, needs to check in order of number of words
             if textLine[0].casefold()  == 'READ'.casefold():
-                loggedItems.append(genLogItem(textLine,workingFolder,homePath))
-            else:
-                try:
-                    print(str.join(textLine[3:]))
-                except:
-                    pass
+                loggedItems.extend(genLogItem(textLine,workingFolder,homePath))
+            elif ''.join(textLine[:3]).casefold() in ['BCControlFile'.casefold(),'GeometryControlFile'.casefold()]:
+                extraFile = genLogItem(textLine,workingFolder,homePath)
+                loggedItems.extend(extraFile)
+                loggedItems.extend(tuflowFileAssessment(path.join(homePath,extraFile[0][1]),homePath))
+        except:
+            pass
     return loggedItems
 
 
 def genLogItem(textLine,workingFolder,homePath):
     fileType = ''
-    filePath = ''
-    for i in range(1,len(textLine)):
+    filePaths = ''
+    loggedItems = []
+    if textLine[0].casefold()=='READ'.casefold():
+        s=1
+    else:
+        s=0
+    for i in range(s,len(textLine)):
         if textLine[i] == '==':
-            fileType = ' '.join(textLine[1:i])
+            fileType = ' '.join(textLine[s:i])
             for j in range(i+1,len(textLine)):
                 if textLine[j][0] == '!':
                     break
                 else:
-                    if filePath != '':
-                        filePath = filePath + ' ' + str(textLine[j])
+                    if filePaths != '':
+                        filePaths = filePaths + ' ' + str(textLine[j])
                     else:
-                        filePath = filePath + str(textLine[j])
+                        filePaths = filePaths + str(textLine[j])
+    for filePath in filePaths.split('|'):
+        filePath = resolveFilePath(filePath.strip(),workingFolder,homePath)
+        loggedItems.append((fileType,filePath))
+    return loggedItems
 
-            if not path.isabs(filePath):
-                filePath = path.join(workingFolder +'\\'+ filePath)
-                print(filePath)
-                filePath = pathlib.Path(filePath).resolve()
-                print(filePath)
-            filePath = path.relpath(filePath, start = homePath)
-    return (fileType,filePath)
 
-tuflowFileAssessment(path.join(tcfPath,tcfFile),homePath)
+def resolveFilePath(filePath,workingFolder,homePath):
+    if not path.isabs(filePath):
+        filePath = path.join(workingFolder +'\\'+ filePath)
+        filePath = pathlib.Path(filePath).resolve()
+    filePath = path.relpath(filePath, start = homePath)
+    return filePath
+
+loggedItems = tuflowFileAssessment(path.join(tcfPath,tcfFile),homePath)
+for loggedItem in loggedItems:
+    print(loggedItem)
