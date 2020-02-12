@@ -8,11 +8,12 @@ import re #Regular expressions, used for wildcard matching
 
 #Provide a tcf file path
 tcfFile = 'FloodModel_~s1~_~e1~.tcf'
+#tcfFile = 'Simple.tcf'
 tcfPath = r'C:\DevArea\TestModel\Runs'
 homePath = r'C:\DevArea\TestModel'
 #(Optional)Provide a list of events
 events=['','hello']
-scenarios=[]
+scenarios=['SEN']
 bcEvents = []
 #(Optional) Provide a list of scenarios
 
@@ -21,7 +22,7 @@ def tuflowFileAssessment(textFile,homePath):
     #Read in file
     file = open(textFile,"r")
     #Split lines into lists using ' ' and tab as delimters
-    splitFile =[]
+    fileLines =[]
     for line in file:
         if re.search('<<~.*~>>', line): #Replace Event/Scenario Operators
             #Replace e# and s#, if suitable scenario exists
@@ -42,16 +43,90 @@ def tuflowFileAssessment(textFile,homePath):
 
         if re.search('BC.*EVENT.*SOURCE',line,re.IGNORECASE): #Find BC Event Source
             bcEvents.append((line.split()[line.split().index('|')-1],line.split()[line.split().index('|')+1]))
-            print(bcEvents)
-        splitFile.append(line.split())
+
+        fileLines.append(line.split())
 
     file.close
-    #Split file into blocks by assessing IF, ELSE and END as first values
-    textBlock = splitFile
+
     workingFolder=path.dirname(textFile)
 
+    textBlock = tuflowBlockAssessment(fileLines,True,False) # process the block to remove lines excluded by logic
     loggedItems.extend(tuflowTextAssessment(textBlock,workingFolder,homePath))
+
     return loggedItems
+
+def tuflowBlockAssessment(fileLines,include,ifFail):
+    # print(fileLines)
+    # print(include)
+    loggedItems =[]
+    textBlock = []
+    ifLines = []
+    for l in range(0,len(fileLines)):
+        if include:
+            textBlock.append(fileLines[l])
+        try: # Catch Short Lines
+            if fileLines[l][0].casefold() == 'IF'.casefold():
+                include = False
+                ifFail = True
+
+                if fileLines[l][1].casefold() == 'EVENT'.casefold():
+                    for event in events:
+                        if event == fileLines[l][3]:
+                            include = True
+                            ifFail = False
+                            break
+
+                elif fileLines[l][1].casefold() == 'SCENARIO'.casefold():
+                    for scenario in scenarios:
+                        if scenario == fileLines[l][3]:
+                            include = True
+                            ifFail = False
+                            break
+
+                textBlock.extend(tuflowBlockAssessment(fileLines[l+1:],include,ifFail))
+                break
+
+
+            if fileLines[l][0].casefold() == 'ELSE'.casefold():
+                if ifFail is True:
+                    try:
+                        if fileLines[l][1].casefold() == 'IF'.casefold():
+                            include = False
+                            ifFail = True
+
+                            if fileLines[l][2].casefold() == 'EVENT'.casefold():
+                                for event in events:
+                                    if event == fileLines[l][4]:
+                                        include = True
+                                        ifFail=False
+                                        break
+
+                            elif fileLines[l][2].casefold() == 'SCENARIO'.casefold():
+                                for scenario in scenarios:
+                                    if scenario == fileLines[l][4]:
+                                        include = True
+                                        ifFail=False
+                                        break
+
+                            textBlock.extend(tuflowBlockAssessment(fileLines[l+1:],include,ifFail))
+                            break
+                        else: #else and somthing not if
+                            include = True
+                    except: #just else on the line
+                        include = True
+                else:
+                    include = False
+
+
+            if ''.join(fileLines[l][:2]).casefold() == 'ENDIF'.casefold():
+                include = True
+
+
+        except:
+            pass
+
+    return textBlock
+
 
 def tuflowTextAssessment(textBlock,workingFolder,homePath):
     loggedItems=[]
