@@ -231,7 +231,15 @@ def genLogItem(textLine,workingFolder,homePath):
     for filePath in filePaths.split('|'):
         filePath = resolveFilePath(filePath.strip(),workingFolder,homePath)
         try:
-            fileTime = str(datetime.fromtimestamp(path.getmtime(path.join(homePath,filePath))).strftime('%d/%m/%Y %H:%M:%S'))
+            fullPath = path.join(homePath,filePath)
+            if re.search('.shp',path.splitext(fullPath)[1],re.IGNORECASE):
+                modTime = max(path.getmtime(path.splitext(fullPath)[0]+'.shp'),path.getmtime(path.splitext(fullPath)[0]+'.shx'),path.getmtime(path.splitext(fullPath)[0]+'.dbf'))
+            elif re.search('.mif',path.splitext(fullPath)[1],re.IGNORECASE):
+                modTime = max(path.getmtime(path.splitext(fullPath)[0]+'.mif'),path.getmtime(path.splitext(fullPath)[0]+'.mid'))
+            else:
+                modTime = path.getmtime(fullPath)
+
+            fileTime = str(datetime.fromtimestamp(modTime).strftime('%d/%m/%Y %H:%M:%S'))
         except:
             fileTime = 'File Missing'
         loggedItems.append((fileType,filePath,fileNotes,fileTime))
