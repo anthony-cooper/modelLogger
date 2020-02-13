@@ -129,7 +129,6 @@ def tuflowBlockAssessment(fileLines,include,ifFail):
 
     return textBlock
 
-
 def tuflowTextAssessment(textBlock,workingFolder,homePath):
     loggedItems=[]
     #4. Take list of lists (lines split into words) and handle
@@ -145,6 +144,7 @@ def tuflowTextAssessment(textBlock,workingFolder,homePath):
             elif ''.join(textLine[:2]).casefold() == 'BCDatabase'.casefold():
                 extraFile = genLogItem(textLine,workingFolder,homePath)
                 loggedItems.extend(extraFile)
+                loggedItems.extend(bcTextAssessment(path.join(homePath,extraFile[0][1]), path.dirname(path.join(homePath,extraFile[0][1])),homePath,bcEvents))
 
             elif ''.join(textLine[:2]).casefold() == 'EventFile'.casefold():
                 extraFile = genLogItem(textLine,workingFolder,homePath)
@@ -153,6 +153,8 @@ def tuflowTextAssessment(textBlock,workingFolder,homePath):
             elif ''.join(textLine[:3]).casefold() in ['PitInletDatabase'.casefold(),'DepthDischargeDatabase'.casefold()]:
                 extraFile = genLogItem(textLine,workingFolder,homePath)
                 loggedItems.extend(extraFile)
+                loggedItems.extend(bcTextAssessment(path.join(homePath,extraFile[0][1]), path.dirname(path.join(homePath,extraFile[0][1])),homePath,[]))
+
 
             elif ''.join(textLine[:3]).casefold() in ['BCControlFile'.casefold(),'GeometryControlFile'.casefold(),'ESTRYControlFile'.casefold()]:
                 extraFile = genLogItem(textLine,workingFolder,homePath)
@@ -160,6 +162,36 @@ def tuflowTextAssessment(textBlock,workingFolder,homePath):
                 loggedItems.extend(tuflowFileAssessment(path.join(homePath,extraFile[0][1]),homePath))
         except:
             pass
+    return loggedItems
+
+def bcTextAssessment(bcFile, workingFolder,homePath,bcEvents):
+    loggedItems =[]
+    #Read in file
+    file = open(bcFile,"r")
+    next(file) #skip header
+    for line in file:
+        for event in bcEvents:
+            line = re.sub(event[0],event[1],line)
+        details = line.split(',')
+        filePath = resolveFilePath(details[1],workingFolder,homePath)
+        try:
+            fileTime = str(datetime.fromtimestamp(path.getmtime(path.join(homePath,filePath))).strftime('%d/%m/%Y %H:%M:%S'))
+        except:
+            fileTime = 'File Missing'
+        fileNotes = '*'+details[3]+' against '+details[2]+' for ' +details[0]+'.'
+
+        #Notes on modifiers added
+        if not details[4] == '':
+            fileNotes = fileNotes = fileNotes + ' '+details[2]+' incremented by '+ details[4]+'.'
+        if not details[5] == '':
+            fileNotes = fileNotes = fileNotes + ' '+details[3]+' multiplied by '+ details[5]+'.'
+        if not details[6] == '':
+            fileNotes = fileNotes = fileNotes + ' '+details[3]+' incremented by '+ details[6]+'.'
+        fileNotes = fileNotes + '*'
+        loggedItems.append(('Boundary Curve(s)',filePath,fileNotes,fileTime))
+
+    file.close
+
     return loggedItems
 
 
@@ -206,7 +238,6 @@ def genLogItem(textLine,workingFolder,homePath):
         if not textLine[1].casefold() == 'GIS'.casefold(): # Only read multiple items for GIS files
             break
     return loggedItems
-
 
 def resolveFilePath(filePath,workingFolder,homePath):
     if not path.isabs(filePath):
