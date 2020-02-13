@@ -43,6 +43,8 @@ def tuflowFileAssessment(textFile,homePath):
 
         if re.search('BC.*EVENT.*SOURCE',line,re.IGNORECASE): #Find BC Event Source
             bcEvents.append((line.split()[line.split().index('|')-1],line.split()[line.split().index('|')+1]))
+        if re.search('ESTRY.*CONTROL.*FILE.*AUTO',line,re.IGNORECASE): #Find ECF Auto
+            line = re.sub('AUTO',' == '+ str(path.splitext(path.basename(textFile))[0])+'.ecf',line,re.IGNORECASE)
 
         fileLines.append(line.split())
 
@@ -134,8 +136,25 @@ def tuflowTextAssessment(textBlock,workingFolder,homePath):
     for textLine in textBlock:
         try: #Catch errors from short lines, needs to check in order of number of words
             if textLine[0].casefold()  == 'READ'.casefold():
-                loggedItems.extend(genLogItem(textLine,workingFolder,homePath))
-            elif ''.join(textLine[:3]).casefold() in ['BCControlFile'.casefold(),'GeometryControlFile'.casefold()]:
+                if textLine[1].casefold()  == 'File'.casefold():
+                    extraFile = genLogItem(textLine,workingFolder,homePath)
+                    loggedItems.extend(extraFile)
+                    loggedItems.extend(tuflowFileAssessment(path.join(homePath,extraFile[0][1]),homePath))
+                else:
+                    loggedItems.extend(genLogItem(textLine,workingFolder,homePath))
+            elif ''.join(textLine[:2]).casefold() == 'BCDatabase'.casefold():
+                extraFile = genLogItem(textLine,workingFolder,homePath)
+                loggedItems.extend(extraFile)
+
+            elif ''.join(textLine[:2]).casefold() == 'EventFile'.casefold():
+                extraFile = genLogItem(textLine,workingFolder,homePath)
+                loggedItems.extend(extraFile)
+                loggedItems.extend(tuflowFileAssessment(path.join(homePath,extraFile[0][1]),homePath))
+            elif ''.join(textLine[:3]).casefold() in ['PitInletDatabase'.casefold(),'DepthDischargeDatabase'.casefold()]:
+                extraFile = genLogItem(textLine,workingFolder,homePath)
+                loggedItems.extend(extraFile)
+
+            elif ''.join(textLine[:3]).casefold() in ['BCControlFile'.casefold(),'GeometryControlFile'.casefold(),'ESTRYControlFile'.casefold()]:
                 extraFile = genLogItem(textLine,workingFolder,homePath)
                 loggedItems.extend(extraFile)
                 loggedItems.extend(tuflowFileAssessment(path.join(homePath,extraFile[0][1]),homePath))
