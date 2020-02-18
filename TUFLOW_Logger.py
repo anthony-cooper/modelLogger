@@ -16,8 +16,22 @@ events=['','hello']
 scenarios=['SEN']
 bcEvents = []
 #(Optional) Provide a list of scenarios
+def tuflowLogger(tcfFile,homePath,events,scenarios):
+    loggedItems = []
 
-def tuflowFileAssessment(textFile,homePath):
+    filePath = resolveFilePath(tcfFile,'',homePath)
+    try:
+        fileTime = str(datetime.fromtimestamp(path.getmtime(path.join(homePath,filePath))).strftime('%d/%m/%Y %H:%M:%S'))
+    except:
+        fileTime = 'File Missing'
+    fileNotes = ''
+    loggedItems.append(('TUFLOW Control File',filePath,fileNotes,fileTime))
+
+    loggedItems.extend(tuflowFileAssessment(tcfFile,homePath,events,scenarios))
+
+    return loggedItems
+
+def tuflowFileAssessment(textFile,homePath,events,scenarios):
     loggedItems =[]
     #Read in file
     file = open(textFile,"r")
@@ -253,7 +267,3 @@ def resolveFilePath(filePath,workingFolder,homePath):
         filePath = pathlib.Path(filePath).resolve()
     filePath = path.relpath(filePath, start = homePath)
     return filePath
-
-loggedItems = tuflowFileAssessment(path.join(tcfPath,tcfFile),homePath)
-for loggedItem in loggedItems:
-     print(loggedItem)
