@@ -3,19 +3,7 @@ import pathlib #Used to rseolve relative paths; Requires python 3.4
 from datetime import datetime #Used to format date/times
 import re #Regular expressions, used for wildcard matching
 
-#(Optional) Parse an IEF to generate 1.
 
-
-#Provide a tcf file path
-tcfFile = 'FloodModel_~s1~_~e1~.tcf'
-#tcfFile = 'Simple.tcf'
-tcfPath = r'C:\DevArea\TestModel\Runs'
-homePath = r'C:\DevArea\TestModel'
-#(Optional)Provide a list of events
-events=['','hello']
-scenarios=['SEN']
-bcEvents = []
-#(Optional) Provide a list of scenarios
 def tuflowLogger(tcfFile,homePath,events,scenarios):
     loggedItems = []
 
@@ -33,6 +21,7 @@ def tuflowLogger(tcfFile,homePath,events,scenarios):
 
 def tuflowFileAssessment(textFile,homePath,events,scenarios):
     loggedItems =[]
+    bcEvents =[]
     #Read in file
     file = open(textFile,"r")
     #Split lines into lists using ' ' and tab as delimters
@@ -67,7 +56,7 @@ def tuflowFileAssessment(textFile,homePath,events,scenarios):
     workingFolder=path.dirname(textFile)
 
     textBlock = tuflowBlockAssessment(fileLines,True,False) # process the block to remove lines excluded by logic
-    loggedItems.extend(tuflowTextAssessment(textBlock,workingFolder,homePath))
+    loggedItems.extend(tuflowTextAssessment(textBlock,workingFolder,homePath, events, scenarios, bcEvents))
 
     return loggedItems
 
@@ -143,7 +132,7 @@ def tuflowBlockAssessment(fileLines,include,ifFail):
 
     return textBlock
 
-def tuflowTextAssessment(textBlock,workingFolder,homePath):
+def tuflowTextAssessment(textBlock,workingFolder,homePath, events, scenarios, bcEvents):
     loggedItems=[]
     #4. Take list of lists (lines split into words) and handle
     for textLine in textBlock:
@@ -152,7 +141,7 @@ def tuflowTextAssessment(textBlock,workingFolder,homePath):
                 if textLine[1].casefold()  == 'File'.casefold():
                     extraFile = genLogItem(textLine,workingFolder,homePath)
                     loggedItems.extend(extraFile)
-                    loggedItems.extend(tuflowFileAssessment(path.join(homePath,extraFile[0][1]),homePath))
+                    loggedItems.extend(tuflowFileAssessment(path.join(homePath,extraFile[0][1]),homePath, events, scenarios))
                 else:
                     loggedItems.extend(genLogItem(textLine,workingFolder,homePath))
             elif ''.join(textLine[:2]).casefold() == 'BCDatabase'.casefold():
@@ -163,7 +152,7 @@ def tuflowTextAssessment(textBlock,workingFolder,homePath):
             elif ''.join(textLine[:2]).casefold() == 'EventFile'.casefold():
                 extraFile = genLogItem(textLine,workingFolder,homePath)
                 loggedItems.extend(extraFile)
-                loggedItems.extend(tuflowFileAssessment(path.join(homePath,extraFile[0][1]),homePath))
+                loggedItems.extend(tuflowFileAssessment(path.join(homePath,extraFile[0][1]),homePath, events, scenarios))
             elif ''.join(textLine[:3]).casefold() in ['PitInletDatabase'.casefold(),'DepthDischargeDatabase'.casefold()]:
                 extraFile = genLogItem(textLine,workingFolder,homePath)
                 loggedItems.extend(extraFile)
@@ -173,7 +162,7 @@ def tuflowTextAssessment(textBlock,workingFolder,homePath):
             elif ''.join(textLine[:3]).casefold() in ['BCControlFile'.casefold(),'GeometryControlFile'.casefold(),'ESTRYControlFile'.casefold()]:
                 extraFile = genLogItem(textLine,workingFolder,homePath)
                 loggedItems.extend(extraFile)
-                loggedItems.extend(tuflowFileAssessment(path.join(homePath,extraFile[0][1]),homePath))
+                loggedItems.extend(tuflowFileAssessment(path.join(homePath,extraFile[0][1]),homePath, events, scenarios))
         except:
             pass
     return loggedItems
@@ -207,7 +196,6 @@ def bcTextAssessment(bcFile, workingFolder,homePath,bcEvents):
     file.close
 
     return loggedItems
-
 
 def genLogItem(textLine,workingFolder,homePath):
     fileType = ''
