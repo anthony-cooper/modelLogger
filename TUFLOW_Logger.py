@@ -6,14 +6,16 @@ import re #Regular expressions, used for wildcard matching
 
 def tuflowLogger(tcfFile,homePath,events,scenarios):
     loggedItems = []
+    fileExists = True
 
     filePath = resolveFilePath(tcfFile,'',homePath)
     try:
         fileTime = str(datetime.fromtimestamp(path.getmtime(path.join(homePath,filePath))).strftime('%d/%m/%Y %H:%M:%S'))
     except:
-        fileTime = 'File Missing'
+        fileExists = False
     fileNotes = ''
-    loggedItems.append(('TUFLOW Control File',filePath,fileNotes,fileTime))
+    readNotes =''
+    loggedItems.append((path.splitext(path.basename(filePath))[0],path.splitext(path.basename(filePath))[1][1:].casefold(),'TUFLOW Control File',filePath,readNotes,fileNotes,fileTime,fileExists))
 
     loggedItems.extend(tuflowFileAssessment(tcfFile,homePath,events,scenarios))
 
@@ -141,34 +143,35 @@ def tuflowTextAssessment(textBlock,workingFolder,homePath, events, scenarios, bc
                 if textLine[1].casefold()  == 'File'.casefold():
                     extraFile = genLogItem(textLine,workingFolder,homePath)
                     loggedItems.extend(extraFile)
-                    loggedItems.extend(tuflowFileAssessment(path.join(homePath,extraFile[0][1]),homePath, events, scenarios))
+                    loggedItems.extend(tuflowFileAssessment(path.join(homePath,extraFile[0][3]),homePath, events, scenarios))
                 else:
                     loggedItems.extend(genLogItem(textLine,workingFolder,homePath))
             elif ''.join(textLine[:2]).casefold() == 'BCDatabase'.casefold():
                 extraFile = genLogItem(textLine,workingFolder,homePath)
                 loggedItems.extend(extraFile)
-                loggedItems.extend(bcTextAssessment(path.join(homePath,extraFile[0][1]), path.dirname(path.join(homePath,extraFile[0][1])),homePath,bcEvents))
+                loggedItems.extend(bcTextAssessment(path.join(homePath,extraFile[0][3]), path.dirname(path.join(homePath,extraFile[0][3])),homePath,bcEvents))
 
             elif ''.join(textLine[:2]).casefold() == 'EventFile'.casefold():
                 extraFile = genLogItem(textLine,workingFolder,homePath)
                 loggedItems.extend(extraFile)
-                loggedItems.extend(tuflowFileAssessment(path.join(homePath,extraFile[0][1]),homePath, events, scenarios))
+                loggedItems.extend(tuflowFileAssessment(path.join(homePath,extraFile[0][3]),homePath, events, scenarios))
             elif ''.join(textLine[:3]).casefold() in ['PitInletDatabase'.casefold(),'DepthDischargeDatabase'.casefold()]:
                 extraFile = genLogItem(textLine,workingFolder,homePath)
                 loggedItems.extend(extraFile)
-                loggedItems.extend(bcTextAssessment(path.join(homePath,extraFile[0][1]), path.dirname(path.join(homePath,extraFile[0][1])),homePath,[]))
+                loggedItems.extend(bcTextAssessment(path.join(homePath,extraFile[0][3]), path.dirname(path.join(homePath,extraFile[0][3])),homePath,[]))
 
 
             elif ''.join(textLine[:3]).casefold() in ['BCControlFile'.casefold(),'GeometryControlFile'.casefold(),'ESTRYControlFile'.casefold()]:
                 extraFile = genLogItem(textLine,workingFolder,homePath)
                 loggedItems.extend(extraFile)
-                loggedItems.extend(tuflowFileAssessment(path.join(homePath,extraFile[0][1]),homePath, events, scenarios))
+                loggedItems.extend(tuflowFileAssessment(path.join(homePath,extraFile[0][3]),homePath, events, scenarios))
         except:
             pass
     return loggedItems
 
 def bcTextAssessment(bcFile, workingFolder,homePath,bcEvents):
     loggedItems =[]
+    fileExists = True
     #Read in file
     file = open(bcFile,"r")
     next(file) #skip header
@@ -180,18 +183,18 @@ def bcTextAssessment(bcFile, workingFolder,homePath,bcEvents):
         try:
             fileTime = str(datetime.fromtimestamp(path.getmtime(path.join(homePath,filePath))).strftime('%d/%m/%Y %H:%M:%S'))
         except:
-            fileTime = 'File Missing'
-        fileNotes = '*'+details[3]+' against '+details[2]+' for ' +details[0]+'.'
+            fileExists = False
+        fileNotes = '*'+details[3]+' against '+details[2]+' for ' +details[0]+'.*'
 
         #Notes on modifiers added
+        readNotes = ''
         if not details[4] == '':
-            fileNotes = fileNotes = fileNotes + ' '+details[2]+' incremented by '+ details[4]+'.'
+            readNotes = details[2]+' incremented by '+ details[4]+'.'
         if not details[5] == '':
-            fileNotes = fileNotes = fileNotes + ' '+details[3]+' multiplied by '+ details[5]+'.'
+            readNotes = details[3]+' multiplied by '+ details[5]+'.'
         if not details[6] == '':
-            fileNotes = fileNotes = fileNotes + ' '+details[3]+' incremented by '+ details[6]+'.'
-        fileNotes = fileNotes + '*'
-        loggedItems.append(('Boundary Curve(s)',filePath,fileNotes,fileTime))
+            readNotes = details[3]+' incremented by '+ details[6]+'.'
+        loggedItems.append((path.splitext(path.basename(filePath))[0],path.splitext(path.basename(filePath))[1][1:].casefold(),'Boundary Curve(s)',filePath,readNotes,fileNotes,fileTime,fileExists))
 
     file.close
 
@@ -202,6 +205,8 @@ def genLogItem(textLine,workingFolder,homePath):
     filePaths = ''
     fileNotes = ''
     fileTime = ''
+    readNotes = ''
+    fileExists = True
     loggedItems = []
     if textLine[0].casefold()=='READ'.casefold():
         s=1
@@ -223,15 +228,11 @@ def genLogItem(textLine,workingFolder,homePath):
                         filePaths = filePaths + ' ' + str(textLine[j])
                     else:
                         filePaths = filePaths + str(textLine[j])
-    if '|' in filePaths:
-            if textLine[1].casefold() == 'GIS'.casefold():
-                fileNotes = '*Read as ' + str(filePaths.count('|')+1) + ' part group.* ' + fileNotes
-            elif textLine[1].casefold() == 'Materials'.casefold():
-                fileNotes = '*Multiplier of ' + str(filePaths.split('|')[1]) + ' applied.* ' + fileNotes
 
     fileNotes = fileNotes.strip()
-    for filePath in filePaths.split('|'):
+    for i, filePath in enumerate(filePaths.split('|')):
         filePath = resolveFilePath(filePath.strip(),workingFolder,homePath)
+        fileExists = True
         try:
             fullPath = path.join(homePath,filePath)
             if re.search('.shp',path.splitext(fullPath)[1],re.IGNORECASE):
@@ -243,8 +244,24 @@ def genLogItem(textLine,workingFolder,homePath):
 
             fileTime = str(datetime.fromtimestamp(modTime).strftime('%d/%m/%Y %H:%M:%S'))
         except:
-            fileTime = 'File Missing'
-        loggedItems.append((fileType,filePath,fileNotes,fileTime))
+            fileExists = False
+
+        if '|' in filePaths:
+                if textLine[1].casefold() == 'GIS'.casefold():
+                    readNotes = 'Read as ' + str(filePaths.count('|')+1) + ' part group with '
+                    if len(filePaths.split('|')) == 3:
+                        if i == 0:
+                            readNotes = readNotes + resolveFilePath(filePaths.split('|')[1].strip(),workingFolder,homePath) + ' and ' + resolveFilePath(filePaths.split('|')[2].strip(),workingFolder,homePath) + '.'
+                        elif i == 1:
+                            readNotes = readNotes + resolveFilePath(filePaths.split('|')[0].strip(),workingFolder,homePath) + ' and ' + resolveFilePath(filePaths.split('|')[2].strip(),workingFolder,homePath) + '.'
+                        else:
+                            readNotes = readNotes + resolveFilePath(filePaths.split('|')[0].strip(),workingFolder,homePath) + ' and ' + resolveFilePath(filePaths.split('|')[1].strip(),workingFolder,homePath) + '.'
+                    else:
+                        readNotes = readNotes + resolveFilePath(filePaths.split('|')[1-i].strip(),workingFolder,homePath) + '.'
+                elif textLine[1].casefold() == 'Materials'.casefold():
+                    readNotes = 'Multiplier of ' + str(filePaths.split('|')[1]) + ' applied.'
+
+        loggedItems.append((path.splitext(path.basename(filePath))[0],path.splitext(path.basename(filePath))[1][1:].casefold(),fileType,filePath,readNotes,fileNotes,fileTime,fileExists))
         if not textLine[1].casefold() == 'GIS'.casefold(): # Only read multiple items for GIS files
             break
     return loggedItems

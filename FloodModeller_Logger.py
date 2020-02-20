@@ -7,14 +7,15 @@ from TUFLOW_Logger import tuflowLogger
 
 def fmLogger(iefFile,homePath):
     loggedItems = []
-
+    fileExists = True
     filePath = resolveFilePath(iefFile,'',homePath)
     try:
         fileTime = str(datetime.fromtimestamp(path.getmtime(path.join(homePath,filePath))).strftime('%d/%m/%Y %H:%M:%S'))
     except:
-        fileTime = 'File Missing'
+        fileExists = False
     fileNotes = ''
-    loggedItems.append(('Flood Modeller Event File',filePath,fileNotes,fileTime))
+    readNotes = ''
+    loggedItems.append((path.splitext(path.basename(filePath))[0],path.splitext(path.basename(filePath))[1][1:].casefold(),'Flood Modeller Event File',filePath,readNotes,fileNotes,fileTime,fileExists))
 
     loggedItems.extend(fmFileAssessment(iefFile,homePath))
 
@@ -86,7 +87,7 @@ def fmTextAssessment(textBlock,workingFolder,homePath):
         try:
             loggedItems.extend(tuflowLogger(tcf,homePath,events,scenarios))
         except:
-            loggedItems.append(('TUFLOW Control File',resolveFilePath(tcf,workingFolder,homePath),'','File Missing'))
+            loggedItems.append((path.splitext(path.basename(filePath))[0],path.splitext(path.basename(filePath))[1][1:].casefold(),'TUFLOW Control File',resolveFilePath(tcf,workingFolder,homePath),'','',False))
 
     return loggedItems
 
@@ -95,7 +96,9 @@ def fmTextAssessment(textBlock,workingFolder,homePath):
 def genLogItem(file, fileType,workingFolder,homePath):
     fileNotes = ''
     fileTime = ''
+    readNotes = ''
     loggedItems = []
+    fileExists = True
 
     filePath = resolveFilePath(file.strip(),workingFolder,homePath)
     try:
@@ -103,8 +106,8 @@ def genLogItem(file, fileType,workingFolder,homePath):
         modTime = path.getmtime(fullPath)
         fileTime = str(datetime.fromtimestamp(modTime).strftime('%d/%m/%Y %H:%M:%S'))
     except:
-        fileTime = 'File Missing'
-    loggedItems.append((fileType,filePath,fileNotes,fileTime))
+        fileExists = False
+    loggedItems.append((path.splitext(path.basename(filePath))[0],path.splitext(path.basename(filePath))[1][1:].casefold(),fileType,filePath,readNotes,fileNotes,fileTime, fileExists))
     return loggedItems
 
 def resolveFilePath(filePath,workingFolder,homePath):
