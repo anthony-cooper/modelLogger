@@ -1,5 +1,7 @@
 import sqlite3
 import os
+from TUFLOW_Logger import tuflowLogger
+from FloodModeller_Logger import fmLogger
 
 modelName = 'floodModel'
 dbLoc = r'C:\DevArea\TestDB'
@@ -7,7 +9,7 @@ dbLoc = r'C:\DevArea\TestDB'
 def setup_Database(modelName, dbLoc):
     #Lists containing tuples containing field Names and Types
     modelTableFields = []
-    modelTableFields.append(('mId','INT AUTO_INCREMENT PRIMARY KEY'))
+    modelTableFields.append(('mId','INT PRIMARY KEY'))
     # Absolute Home path
     # Model type
     # Submission date
@@ -18,22 +20,26 @@ def setup_Database(modelName, dbLoc):
     # Approver
 
     simulationTableFields = []
-    simulationTableFields.append(('sId','INT AUTO_INCREMENT PRIMARY KEY'))
+    simulationTableFields.append(('sId','INTEGER PRIMARY KEY'))
+    simulationTableFields.append(('simName','VARCHAR(255)'))
+
     # simulation info (fail?, time, event, scenario, etc)
 
 
     fileTableFields = []
-    fileTableFields.append(('fId','INT AUTO_INCREMENT PRIMARY KEY'))
-    # fileName
-    # fileExt
-    # Type
-    # rel path from home
-    # modifiers applied
-    # file last modified
-    # file exists
+    fileTableFields.append(('fId','INTEGER PRIMARY KEY'))
+    fileTableFields.append(('fileName','VARCHAR(255)'))
+    fileTableFields.append(('fileExt','VARCHAR(255)'))
+    fileTableFields.append(('type','VARCHAR(255)'))
+    fileTableFields.append(('path','VARCHAR(255)'))
+    fileTableFields.append(('readInSettings','TEXT'))
+    fileTableFields.append(('notes','TEXT'))
+    fileTableFields.append(('lastModified','TIMESTAMP'))
+    fileTableFields.append(('fileExists','VARCHAR(255)'))
+
 
     commentTableFields = []
-    commentTableFields.append(('cId','INT AUTO_INCREMENT PRIMARY KEY'))                         #table primary key
+    commentTableFields.append(('cId','INTEGER PRIMARY KEY'))                         #table primary key
     commentTableFields.append(('user','VARCHAR(255)'))                                          #User name of commenter
     commentTableFields.append(('commentTime','TIMESTAMP'))                                      #Time of comment
     commentTableFields.append(('commentText','TEXT'))                                           #Comment Text
@@ -109,5 +115,56 @@ def setup_Database(modelName, dbLoc):
 
     return mydb
 
+def log_file(db, file):
+    cursor = db.cursor()
+    sqlCommand = 'SELECT fId FROM files WHERE fileName  = ? AND fileExt = ? AND type = ? AND path = ? AND readInSettings = ? AND notes = ?'
+    cursor.execute(sqlCommand,file[:6])
+    data=cursor.fetchone()
+    if data is None:
+        sqlCommand = 'INSERT INTO files(fileName,fileExt,type,path,readInSettings,notes,lastModified,fileExists) VALUES (?,?,?,?,?,?,?,?)'
+        cursor.execute(sqlCommand, file)
+        db.commit()
+        return cursor.lastrowid
+    else:
+        return data[0]
+
+def log_sim(db, sim):
+    cursor = db.cursor()
+    #sqlCommand = 'SELECT fId FROM files WHERE fileName  = ? AND fileExt = ? AND type = ? AND path = ? AND readInSettings = ? AND notes = ?'
+    #cursor.execute(sqlCommand,file[:6])
+    #data=cursor.fetchone()
+    #if data is None:
+    if True:
+        sqlCommand = 'INSERT INTO simulations(simName) VALUES (?)'
+        cursor.execute(sqlCommand, sim)
+        db.commit()
+        return cursor.lastrowid
+    #else:
+        #return data[0]
+
+
+def link_sim_file(db, sId, fId):
+    cursor = db.cursor()
+    sqlCommand = 'INSERT INTO simulation_file(simulationID,fileID) VALUES (?,?)'
+    cursor.execute(sqlCommand,[sId,fId])
+    db.commit()
+
+
+iefFile = 'FM_Test.ief'
+iefPath = r'C:\DevArea\TestModel\FM'
+homePath = r'C:\DevArea\TestModel'
+
+
 db = setup_Database(modelName, dbLoc)
-print(db)
+print('********** SET UP COMPLETE**********')
+
+for file in os.listdir(iefPath):
+    if os.path.splitext(file)[1].casefold() == '.ief'.casefold():
+        loggedItems = fmLogger(os.path.join(iefPath,file),homePath)
+        simFiles = []
+        sId = log_sim(db,['test'])
+        for loggedItem in loggedItems:
+            fId = log_file(db,loggedItem)
+            if fId not in simFiles:
+                link_sim_file(db,sId,fId)
+                simFiles.append(log_file(db,loggedItem))
