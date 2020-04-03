@@ -155,13 +155,17 @@ def tuflowTextAssessment(textBlock,workingFolder,homePath, events, scenarios, bc
                 extraFile = genLogItem(textLine,workingFolder,homePath)
                 loggedItems.extend(extraFile)
                 loggedItems.extend(tuflowFileAssessment(path.join(homePath,extraFile[0][3]),homePath, events, scenarios))
+            elif ''.join(textLine[:2]).casefold() in ['LogFolder'.casefold(),'OutputFolder'.casefold()]:
+                extraFile = genLogItem(textLine,workingFolder,homePath)
+                loggedItems.extend(extraFile)
+                loggedItems.extend(tuflowFileAssessment(path.join(homePath,extraFile[0][3]),homePath, events, scenarios))
             elif ''.join(textLine[:3]).casefold() in ['PitInletDatabase'.casefold(),'DepthDischargeDatabase'.casefold()]:
                 extraFile = genLogItem(textLine,workingFolder,homePath)
                 loggedItems.extend(extraFile)
                 loggedItems.extend(bcTextAssessment(path.join(homePath,extraFile[0][3]), path.dirname(path.join(homePath,extraFile[0][3])),homePath,[]))
 
 
-            elif ''.join(textLine[:3]).casefold() in ['BCControlFile'.casefold(),'GeometryControlFile'.casefold(),'ESTRYControlFile'.casefold()]:
+            elif ''.join(textLine[:3]).casefold() in ['BCControlFile'.casefold(),'GeometryControlFile'.casefold(),'ESTRYControlFile'.casefold(),'WriteCheckFiles'.casefold()]:
                 extraFile = genLogItem(textLine,workingFolder,homePath)
                 loggedItems.extend(extraFile)
                 loggedItems.extend(tuflowFileAssessment(path.join(homePath,extraFile[0][3]),homePath, events, scenarios))
