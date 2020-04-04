@@ -53,6 +53,8 @@ def fmTextAssessment(textBlock,workingFolder,homePath):
                 loggedItems.extend(genLogItem(textLine[1],'Flood Modeller Initial Conditions',workingFolder,homePath))
             elif textLine[0].casefold()  == 'EventData'.casefold():
                 loggedItems.extend(genLogItem(textLine[1],'Flood Modeller Event Data', workingFolder,homePath))
+            elif textLine[0].casefold()  == 'Results'.casefold():
+                loggedItems.extend(genLogItem(textLine[1],'Flood Modeller Results Folder', workingFolder,homePath))
             elif textLine[0].casefold()  == '2DFile'.casefold():
                 tcf = textLine[1].strip()
             elif textLine[0].casefold()  == '2DOptions'.casefold():
