@@ -2,6 +2,9 @@ import sqlite3
 import os
 from TUFLOW_Logger import tuflowLogger
 from FloodModeller_Logger import fmLogger
+from TLF_Logger import tlfLogger
+from ZZD_Logger import zzdLogger
+from tuflow_variableLogic import genFileName
 
 modelName = 'floodModel'
 dbLoc = r'C:\DevArea\TestDB'
@@ -50,6 +53,18 @@ def setup_Database(modelName, dbLoc):
     commentTableFields.append(('FOREIGN KEY(proceedingComment)','REFERENCES comments(cId)'))    #Set up foreign key reference
     commentTableFields.append(('FOREIGN KEY(succeedingComment)','REFERENCES comments(cId)'))    #Set up foreign key reference
 
+    esTableFields = []
+    esTableFields.append(('esId','INTEGER PRIMARY KEY'))                      #table primary key
+    esTableFields.append(('value','VARCHAR(255)'))                            #Scenario/event
+    esTableFields.append(('type','INT'))                                      #event (true), scenario(false)
+
+    nsParasTableFields = []
+    nsParasTableFields.append(('nsParasId','INTEGER PRIMARY KEY'))                      #table primary key
+    nsParasTableFields.append(('parameter','TEXT'))                            #parameter and change
+    nsParasTableFields.append(('software','INT'))                                      #tuflow(true), flood modeller (false)
+
+
+
     #Link Tables
     model_simulation_LinksFields = []
     model_simulation_LinksFields.append(('modelID','INT'))                                                #Model ID - foreign key link
@@ -62,6 +77,18 @@ def setup_Database(modelName, dbLoc):
     simulation_file_LinksFields.append(('fileID','INT'))                                                 #File ID - foreign key link
     simulation_file_LinksFields.append(('FOREIGN KEY(simulationID)','REFERENCES simulations(sId)'))      #Set up foreign key reference
     simulation_file_LinksFields.append(('FOREIGN KEY(fileID)','REFERENCES files(fId)'))                  #Set up foreign key reference
+
+    simulation_es_LinksFields = []
+    simulation_es_LinksFields.append(('simulationID','INT'))                                           #Simulation ID - foreign key link
+    simulation_es_LinksFields.append(('esID','INT'))                                                 #File ID - foreign key link
+    simulation_es_LinksFields.append(('FOREIGN KEY(simulationID)','REFERENCES simulations(sId)'))      #Set up foreign key reference
+    simulation_es_LinksFields.append(('FOREIGN KEY(esID)','REFERENCES es(esId)'))                  #Set up foreign key reference
+
+    simulation_nsParas_LinksFields = []
+    simulation_nsParas_LinksFields.append(('simulationID','INT'))                                           #Simulation ID - foreign key link
+    simulation_nsParas_LinksFields.append(('nsParasID','INT'))                                                 #File ID - foreign key link
+    simulation_nsParas_LinksFields.append(('FOREIGN KEY(simulationID)','REFERENCES simulations(sId)'))      #Set up foreign key reference
+    simulation_nsParas_LinksFields.append(('FOREIGN KEY(nsParasID)','REFERENCES nsParas(nsParasId)'))                  #Set up foreign key reference
 
     file_file_LinksFields = []
     file_file_LinksFields.append(('fileAID','INT'))                                                 #File A ID - foreign key link
@@ -91,6 +118,15 @@ def setup_Database(modelName, dbLoc):
     databaseTables.append(('simulation_file',simulation_file_LinksFields))
     databaseTables.append(('file_file',file_file_LinksFields))
     databaseTables.append(('comments_ALL',comment_ALL_LinksFields))
+    databaseTables.append(('es',esTableFields))
+    databaseTables.append(('simulation_es',simulation_es_LinksFields))
+    databaseTables.append(('nsParas',nsParasTableFields))
+    databaseTables.append(('simulation_nsParas',simulation_nsParas_LinksFields))
+
+
+
+
+
 
 
 
@@ -115,18 +151,6 @@ def setup_Database(modelName, dbLoc):
 
     return mydb
 
-def log_file(db, file):
-    cursor = db.cursor()
-    sqlCommand = 'SELECT fId FROM files WHERE fileName  = ? AND fileExt = ? AND type = ? AND path = ? AND readInSettings = ? AND notes = ?'
-    cursor.execute(sqlCommand,file[:6])
-    data=cursor.fetchone()
-    if data is None:
-        sqlCommand = 'INSERT INTO files(fileName,fileExt,type,path,readInSettings,notes,lastModified,fileExists) VALUES (?,?,?,?,?,?,?,?)'
-        cursor.execute(sqlCommand, file)
-        db.commit()
-        return cursor.lastrowid
-    else:
-        return data[0]
 
 def log_sim(db, sim):
     cursor = db.cursor()
@@ -141,12 +165,61 @@ def log_sim(db, sim):
         return cursor.lastrowid
     #else:
         #return data[0]
-
+def log_file(db, file):
+    cursor = db.cursor()
+    sqlCommand = 'SELECT fId FROM files WHERE fileName  = ? AND fileExt = ? AND type = ? AND path = ? AND readInSettings = ? AND notes = ?'
+    cursor.execute(sqlCommand,file[:6])
+    data=cursor.fetchone()
+    if data is None:
+        sqlCommand = 'INSERT INTO files(fileName,fileExt,type,path,readInSettings,notes,lastModified,fileExists) VALUES (?,?,?,?,?,?,?,?)'
+        cursor.execute(sqlCommand, file)
+        db.commit()
+        return cursor.lastrowid
+    else:
+        return data[0]
 
 def link_sim_file(db, sId, fId):
     cursor = db.cursor()
     sqlCommand = 'INSERT INTO simulation_file(simulationID,fileID) VALUES (?,?)'
     cursor.execute(sqlCommand,[sId,fId])
+    db.commit()
+
+def log_es(db, value, type):
+    cursor = db.cursor()
+    sqlCommand = 'SELECT esId FROM es WHERE value  = ? AND type = ?'
+    cursor.execute(sqlCommand,[value, type])
+    data=cursor.fetchone()
+    if data is None:
+        sqlCommand = 'INSERT INTO es(value, type) VALUES (?,?)'
+        cursor.execute(sqlCommand, [value, type])
+        db.commit()
+        return cursor.lastrowid
+    else:
+        return data[0]
+
+def link_sim_es(db, sId, esId):
+    cursor = db.cursor()
+    sqlCommand = 'INSERT INTO simulation_es(simulationID,esID) VALUES (?,?)'
+    cursor.execute(sqlCommand,[sId,esId])
+    db.commit()
+
+def log_nsParas(db, parameter, software):
+    cursor = db.cursor()
+    sqlCommand = 'SELECT nsParasId FROM nsParas WHERE parameter  = ? AND software = ?'
+    cursor.execute(sqlCommand,[parameter, software])
+    data=cursor.fetchone()
+    if data is None:
+        sqlCommand = 'INSERT INTO nsParas(parameter, software) VALUES (?,?)'
+        cursor.execute(sqlCommand, [parameter, software])
+        db.commit()
+        return cursor.lastrowid
+    else:
+        return data[0]
+
+def link_sim_nsParas(db, sId, nsParasId):
+    cursor = db.cursor()
+    sqlCommand = 'INSERT INTO simulation_nsParas(simulationID,nsParasID) VALUES (?,?)'
+    cursor.execute(sqlCommand,[sId,nsParasId])
     db.commit()
 
 
@@ -160,11 +233,52 @@ print('********** SET UP COMPLETE**********')
 
 for file in os.listdir(iefPath):
     if os.path.splitext(file)[1].casefold() == '.ief'.casefold():
-        loggedItems = fmLogger(os.path.join(iefPath,file),homePath)
+        inputs = fmLogger(os.path.join(iefPath,file),homePath)
         simFiles = []
+        zzdPath = ''
+        tlfFolderPath = ''
+        tuflowSimulationName = ''
         sId = log_sim(db,['test'])
-        for loggedItem in loggedItems:
-            fId = log_file(db,loggedItem)
-            if fId not in simFiles:
-                link_sim_file(db,sId,fId)
-                simFiles.append(log_file(db,loggedItem))
+
+        for event in inputs[1]:
+            if event:
+                esId = log_es(db, event,True)
+                link_sim_es(db,sId,esId)
+        for scenario in inputs[2]:
+            if scenario:
+                esId = log_es(db, scenario,False)
+                link_sim_es(db,sId,esId)
+
+
+
+
+        for inputFile in inputs[0]:
+            if inputFile[2] == 'Flood Modeller Results Folder':
+                zzdPath = os.path.join(homePath,inputFile[3]+'.zzd')
+            elif inputFile[2] == 'Log Folder':
+                tlfFolderPath = os.path.join(homePath,inputFile[3])
+            elif inputFile[2] == 'TUFLOW Control File':
+                tuflowSimulationName = genFileName(inputFile[0],inputs[1],inputs[2])
+                fId = log_file(db,inputFile)
+                if fId not in simFiles:
+                    link_sim_file(db,sId,fId)
+                    simFiles.append(log_file(db,inputFile))
+
+            elif inputFile[2] in ['Output Folder', 'Write Check Files']:
+                print(inputFile[3])
+            else:
+                fId = log_file(db,inputFile)
+                if fId not in simFiles:
+                    link_sim_file(db,sId,fId)
+                    simFiles.append(log_file(db,inputFile))
+
+        print(zzdPath)
+        print(os.path.join(tlfFolderPath,tuflowSimulationName+'.tlf'))
+
+        #if being added to simulation tables
+            #check if column exists
+                #add column if not
+            #modify column in existing record (sID) to have given value
+        #if flood modeller mod parameter
+            #nsParasId = log_nsParas(db, parameter,False)
+            #link_sim_nsParas(db,sId,nsParasId)
