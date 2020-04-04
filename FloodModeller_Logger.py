@@ -17,9 +17,10 @@ def fmLogger(iefFile,homePath):
     readNotes = ''
     loggedItems.append((path.splitext(path.basename(filePath))[0],path.splitext(path.basename(filePath))[1][1:].casefold(),'Flood Modeller Event File',filePath,readNotes,fileNotes,fileTime,fileExists))
 
-    loggedItems.extend(fmFileAssessment(iefFile,homePath))
+    files, events, scenarios = fmFileAssessment(iefFile,homePath)
+    loggedItems.extend(files)
 
-    return loggedItems
+    return loggedItems, events, scenarios
 
 def fmFileAssessment(textFile,homePath):
     loggedItems =[]
@@ -33,9 +34,10 @@ def fmFileAssessment(textFile,homePath):
 
     workingFolder=path.dirname(textFile)
 
-    loggedItems.extend(fmTextAssessment(fileLines,workingFolder,homePath))
+    files, events, scenarios = fmTextAssessment(fileLines,workingFolder,homePath)
+    loggedItems.extend(files)
 
-    return loggedItems
+    return loggedItems, events, scenarios
 
 def fmTextAssessment(textBlock,workingFolder,homePath):
     loggedItems=[]
@@ -87,11 +89,12 @@ def fmTextAssessment(textBlock,workingFolder,homePath):
             tcf = path.join(workingFolder +'\\'+ tcf)
             tcf = pathlib.Path(tcf).resolve()
         try:
-            loggedItems.extend(tuflowLogger(tcf,homePath,events,scenarios))
+            tuflowFiles, events, scenarios = tuflowLogger(tcf,homePath,events,scenarios)
+            loggedItems.extend(tuflowFiles)
         except:
             loggedItems.append((path.splitext(path.basename(filePath))[0],path.splitext(path.basename(filePath))[1][1:].casefold(),'TUFLOW Control File',resolveFilePath(tcf,workingFolder,homePath),'','',False))
 
-    return loggedItems
+    return loggedItems, events, scenarios
 
 
 

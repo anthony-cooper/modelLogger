@@ -19,7 +19,7 @@ def tuflowLogger(tcfFile,homePath,events,scenarios):
 
     loggedItems.extend(tuflowFileAssessment(tcfFile,homePath,events,scenarios))
 
-    return loggedItems
+    return loggedItems, events, scenarios
 
 def tuflowFileAssessment(textFile,homePath,events,scenarios):
     loggedItems =[]

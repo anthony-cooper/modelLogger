@@ -26,7 +26,7 @@ for file in os.listdir(iefPath):
     if path.splitext(file)[1].casefold() == '.ief'.casefold():
         loggedItems = fmLogger(path.join(iefPath,file),homePath)
 
-        for loggedItem in loggedItems:
+        for loggedItem in loggedItems[0]:
             print(loggedItem)
         print('-------------------------')
 
