@@ -2,6 +2,7 @@ import os #Used for listing files in folder
 import os.path as path #Used for path commands
 from TUFLOW_Logger import tuflowLogger
 from FloodModeller_Logger import fmLogger
+from TLF_Logger import tlfLogger
 
 
 
@@ -27,3 +28,11 @@ for file in os.listdir(iefPath):
         for loggedItem in loggedItems:
             print(loggedItem)
         print('-------------------------')
+
+
+tlfPath = r'C:\DevArea\TestModel\FloodModel_BASE_0100.tlf'
+loggedItems = tlfLogger(tlfPath)
+
+for loggedItem in loggedItems:
+    print(loggedItem)
+print('-------------------------')

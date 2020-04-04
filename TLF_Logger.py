@@ -61,6 +61,9 @@ def tlfTextAssessment(textBlock):
                         summary = next(text)
                         if ':' in ' '.join(summary):
                             loggedItems.append((' '.join(summary).split(':')[0],' '.join(summary).split(':')[1].split()[0]))
+                            if ' '.join(summary).split(':')[0] == 'Peak Cumulative ME':
+                                loggedItems.append(('Peak Cumulative ME Time',' '.join(summary).split(':')[1].split()[2]))
+
                     except:
                         break
 
@@ -73,10 +76,3 @@ def tlfTextAssessment(textBlock):
         except:
             pass
     return loggedItems
-
-tlfPath = r'C:\DevArea\TestModel\FloodModel_BASE_0100.tlf'
-loggedItems = tlfLogger(tlfPath)
-
-for loggedItem in loggedItems:
-    print(loggedItem)
-print('-------------------------')
