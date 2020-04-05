@@ -61,6 +61,9 @@ def zzdTextAssessment(textBlock):
                     ne = next(text)
                     loggedItems.append(('Flood Modeller Precision',ne[0]))
                     loggedItems.append(('Flood Modeller Version Type',ne[2] ))
+                    ne = next(text)
+                    loggedItems.append(('Flood Modeller Start Time', ne[5] + ' ' + ne[3]))
+
             elif ' '.join(textLine) == 'Flood Modeller 1D Solver run parameters modified as follows:':
                 while True:
                     try:
