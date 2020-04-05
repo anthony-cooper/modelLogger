@@ -11,15 +11,13 @@ from tuflow_variableLogic import genFileName
 def setup_Database(modelName, dbLoc):
     #Lists containing tuples containing field Names and Types
     modelTableFields = []
-    modelTableFields.append(('mId','INT PRIMARY KEY'))
-    # Absolute Home path
-    # Model type
-    # Submission date
-    # Signed off
-    # Sign off date
-    # Modeller
-    # Checker
-    # Approver
+    modelTableFields.append(('mId','INTEGER PRIMARY KEY'))
+    modelTableFields.append(('versionName','VARCHAR(255)'))
+    modelTableFields.append(('versionNotes','TEXT'))
+    modelTableFields.append(('submissionDate','TIMESTAMP'))
+    modelTableFields.append(('modelType','VARCHAR(255)'))
+    modelTableFields.append(('modeller','VARCHAR(255)'))
+    modelTableFields.append(('homePath','VARCHAR(255)'))
 
     simulationTableFields = []
     simulationTableFields.append(('sId','INTEGER PRIMARY KEY'))
@@ -165,6 +163,12 @@ def setup_Database(modelName, dbLoc):
 
     return mydb
 
+def log_mod(db, modelDetails):
+    cursor = db.cursor()
+    sqlCommand = 'INSERT INTO models(versionName,versionNotes,submissionDate,modelType,modeller,homePath) VALUES (?,?,?,?,?,?)'
+    cursor.execute(sqlCommand, modelDetails)
+    db.commit()
+    return cursor.lastrowid
 
 def log_sim(db,simName):
     cursor = db.cursor()
@@ -172,6 +176,12 @@ def log_sim(db,simName):
     cursor.execute(sqlCommand, [simName, datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")])
     db.commit()
     return cursor.lastrowid
+
+def link_mod_sim(db, mId, sId):
+    cursor = db.cursor()
+    sqlCommand = 'INSERT INTO model_simulation(modelID,simulationID) VALUES (?,?)'
+    cursor.execute(sqlCommand,[mId,sId])
+    db.commit()
 
 def log_simX(db,sId,parameter,value,software):
     cursor = db.cursor()
@@ -187,7 +197,7 @@ def log_file(db, file):
     data=cursor.fetchone()
     if data is None:
         sqlCommand = 'INSERT INTO files(fileName,fileExt,type,path,readInSettings,notes,lastModified,fileExists,software) VALUES (?,?,?,?,?,?,?,?,?)'
-        #print(file)
+        # g print(file)
         cursor.execute(sqlCommand, file)
         db.commit()
         return cursor.lastrowid
@@ -238,15 +248,19 @@ def link_sim_nsParas(db, sId, nsParasId):
     cursor.execute(sqlCommand,[sId,nsParasId])
     db.commit()
 
-def logSimulation_0_IEF(db,iefFilePath, homePath):
+def logSimulation_0_IEF(db,iefFilePath, mId, homePath):
     inputs = fmLogger(iefFilePath,homePath)
     print('any ief, tcf files logged and events and scenarios recognised')
     simName = os.path.splitext(os.path.basename(iefFilePath))[0]
     sId = log_sim(db, simName)
+    link_mod_sim(db, mId, sId)
     print('simulation created simulation ID: ' + str(sId))
 
     logSimulation_1_eventsScenarios(db, sId, inputs[1], inputs[2])
     logSimulation_2_items(db, sId, inputs[0], inputs[1], inputs[2])
+
+    print('********** SIMULATION LOGGED **********')
+
 
 #def logSimulation_0_TCF(db,tcfPath, events, scenarios):
 
@@ -326,12 +340,23 @@ modelName = 'floodModel'
 dbLoc = r'C:\DevArea\TestDB'
 
 iefPath = r'C:\DevArea\TestModel\FM\IEF'
+
+versionName = 'TEST'
+versionNotes = ''
+submissionDate = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
+modelType = ''
+modeller = ''
 homePath = r'C:\DevArea\TestModel'
 
 
 db = setup_Database(modelName, dbLoc)
-print('********** SET UP COMPLETE**********')
+print('********** SET UP COMPLETE **********')
+
+modelDetails = [versionName,versionNotes,submissionDate,modelType,modeller,homePath]
+mId = log_mod(db,modelDetails)
+print('********** MODEL CREATED **********')
+
 
 for file in os.listdir(iefPath):
     if os.path.splitext(file)[1].casefold() == '.ief'.casefold():
-        logSimulation_0_IEF(db,os.path.join(iefPath,file), homePath)
+        logSimulation_0_IEF(db,os.path.join(iefPath,file),mId, homePath)
