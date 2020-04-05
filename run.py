@@ -17,7 +17,7 @@ scenarios=['SEN']
 bcEvents = []
 
 iefFile = 'FM_Test.ief'
-iefPath = r'C:\DevArea\TestModel\FM'
+iefPath = r'C:\DevArea\TestModel\FM\IEF'
 
 #loggedItems = tuflowLogger(path.join(tcfPath,tcfFile),homePath,events,scenarios)
 
@@ -31,14 +31,14 @@ for file in os.listdir(iefPath):
         print('-------------------------')
 
 
-tlfPath = r'C:\DevArea\TestModel\FloodModel_BASE_0100.tlf'
+tlfPath = r'C:\DevArea\TestModel\Logs\FloodModel_BASE_0100\FloodModel_BASE_0100.tlf'
 loggedItems = tlfLogger(tlfPath)
 
 for loggedItem in loggedItems:
     print(loggedItem)
 print('-------------------------')
 
-zzdPath = r'C:\DevArea\TestModel\FM\BROOKSTRAY_[02-00_EP2020-NC]_[TOPO-EXG_CHAN-EXG_001].zzd'
+zzdPath = r'C:\DevArea\TestModel\FM\Results\FloodModel_BASE_0100.zzd'
 loggedItems = zzdLogger(zzdPath)
 
 for loggedItem in loggedItems:
