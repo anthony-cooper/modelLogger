@@ -15,7 +15,7 @@ def fmLogger(iefFile,homePath):
         fileExists = False
     fileNotes = ''
     readNotes = ''
-    loggedItems.append((path.splitext(path.basename(filePath))[0],path.splitext(path.basename(filePath))[1][1:].casefold(),'Flood Modeller Event File',filePath,readNotes,fileNotes,fileTime,fileExists))
+    loggedItems.append((path.splitext(path.basename(filePath))[0],path.splitext(path.basename(filePath))[1][1:].casefold(),'Flood Modeller Event File',filePath,readNotes,fileNotes,fileTime,fileExists,False))
 
     files, events, scenarios = fmFileAssessment(iefFile,homePath)
     loggedItems.extend(files)
@@ -112,7 +112,7 @@ def genLogItem(file, fileType,workingFolder,homePath):
         fileTime = str(datetime.fromtimestamp(modTime).strftime('%d/%m/%Y %H:%M:%S'))
     except:
         fileExists = False
-    loggedItems.append((path.splitext(path.basename(filePath))[0],path.splitext(path.basename(filePath))[1][1:].casefold(),fileType,filePath,readNotes,fileNotes,fileTime, fileExists))
+    loggedItems.append((path.splitext(path.basename(filePath))[0],path.splitext(path.basename(filePath))[1][1:].casefold(),fileType,filePath,readNotes,fileNotes,fileTime, fileExists, False))
     return loggedItems
 
 def resolveFilePath(filePath,workingFolder,homePath):

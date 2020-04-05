@@ -15,7 +15,7 @@ def tuflowLogger(tcfFile,homePath,events,scenarios):
         fileExists = False
     fileNotes = ''
     readNotes =''
-    loggedItems.append((path.splitext(path.basename(filePath))[0],path.splitext(path.basename(filePath))[1][1:].casefold(),'TUFLOW Control File',filePath,readNotes,fileNotes,fileTime,fileExists))
+    loggedItems.append((path.splitext(path.basename(filePath))[0],path.splitext(path.basename(filePath))[1][1:].casefold(),'TUFLOW Control File',filePath,readNotes,fileNotes,fileTime,fileExists,True))
 
     loggedItems.extend(tuflowFileAssessment(tcfFile,homePath,events,scenarios))
 
@@ -198,7 +198,7 @@ def bcTextAssessment(bcFile, workingFolder,homePath,bcEvents):
             readNotes = details[3]+' multiplied by '+ details[5]+'.'
         if not details[6] == '':
             readNotes = details[3]+' incremented by '+ details[6]+'.'
-        loggedItems.append((path.splitext(path.basename(filePath))[0],path.splitext(path.basename(filePath))[1][1:].casefold(),'Boundary Curve(s)',filePath,readNotes,fileNotes,fileTime,fileExists))
+        loggedItems.append((path.splitext(path.basename(filePath))[0],path.splitext(path.basename(filePath))[1][1:].casefold(),'Boundary Curve(s)',filePath,readNotes,fileNotes,fileTime,fileExists, True))
 
     file.close
 
@@ -265,7 +265,7 @@ def genLogItem(textLine,workingFolder,homePath):
                 elif textLine[1].casefold() == 'Materials'.casefold():
                     readNotes = 'Multiplier of ' + str(filePaths.split('|')[1]) + ' applied.'
 
-        loggedItems.append((path.splitext(path.basename(filePath))[0],path.splitext(path.basename(filePath))[1][1:].casefold(),fileType,filePath,readNotes,fileNotes,fileTime,fileExists))
+        loggedItems.append((path.splitext(path.basename(filePath))[0],path.splitext(path.basename(filePath))[1][1:].casefold(),fileType,filePath,readNotes,fileNotes,fileTime,fileExists,True))
         if not textLine[1].casefold() == 'GIS'.casefold(): # Only read multiple items for GIS files
             break
     return loggedItems

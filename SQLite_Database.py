@@ -50,6 +50,7 @@ def setup_Database(modelName, dbLoc):
     fileTableFields.append(('notes','TEXT'))
     fileTableFields.append(('lastModified','TIMESTAMP'))
     fileTableFields.append(('fileExists','VARCHAR(255)'))
+    fileTableFields.append(('software','INT'))
 
 
     # commentTableFields = []
@@ -185,7 +186,8 @@ def log_file(db, file):
     cursor.execute(sqlCommand,file[:6])
     data=cursor.fetchone()
     if data is None:
-        sqlCommand = 'INSERT INTO files(fileName,fileExt,type,path,readInSettings,notes,lastModified,fileExists) VALUES (?,?,?,?,?,?,?,?)'
+        sqlCommand = 'INSERT INTO files(fileName,fileExt,type,path,readInSettings,notes,lastModified,fileExists,software) VALUES (?,?,?,?,?,?,?,?,?)'
+        #print(file)
         cursor.execute(sqlCommand, file)
         db.commit()
         return cursor.lastrowid
