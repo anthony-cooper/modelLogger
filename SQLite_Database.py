@@ -329,7 +329,7 @@ def logSimulation_2_items(db,sId, inputFiles, events, scenarios):
             if tlfItem[0].split()[0] in ['Event', 'Scenario']:
                 continue
             else:
-                log_simX(db,sId,zzdItem[0],zzdItem[1],False)
+                log_simX(db,sId,tlfItem[0],tlfItem[1],True)
         print('tlf logged')
     except:
         print('tlf log failed, probably doesn\'t exist')
