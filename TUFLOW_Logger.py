@@ -46,93 +46,168 @@ def tuflowFileAssessment(textFile,homePath,events,scenarios):
             except:
                 line = re.sub('<<~s*.~>>','SCENARIO',line)
 
-        if re.search('BC.*EVENT.*SOURCE',line,re.IGNORECASE): #Find BC Event Source
-            bcEvents.append((line.split()[line.split().index('|')-1],line.split()[line.split().index('|')+1]))
         if re.search('ESTRY.*CONTROL.*FILE.*AUTO',line,re.IGNORECASE): #Find ECF Auto
             line = re.sub('AUTO',' == '+ str(path.splitext(path.basename(textFile))[0])+'.ecf',line,re.IGNORECASE)
 
         fileLines.append(line.split())
 
     file.close
-
     workingFolder=path.dirname(textFile)
 
-    textBlock = tuflowBlockAssessment(fileLines,True,False) # process the block to remove lines excluded by logic
+    textBlock = tuflowBlockAssessment(fileLines,events,scenarios) # process the block to remove lines excluded by logic
+    #print(textBlock)
+    #print('*')
+    for line in textBlock:
+        # if re.search('BC.*EVENT.*SOURCE',line,re.IGNORECASE): #Find BC Event Source
+        #     bcEvents.append((line.split()[line.split().index('|')-1],line.split()[line.split().index('|')+1]))
+        try:
+            if ''.join(line[:3]).casefold() == 'BCEVENTSOURCE'.casefold():
+                bcEvents.append((line[4],line[6]))
+        except:
+            pass
+
     loggedItems.extend(tuflowTextAssessment(textBlock,workingFolder,homePath, events, scenarios, bcEvents))
 
     return loggedItems
 
-def tuflowBlockAssessment(fileLines,include,ifFail):
-    # print(fileLines)
-    # print(include)
+def tuflowBlockAssessment(fileLines,events,scenarios):
+    #print('START TBA')
+
+    #print(fileLines)
+    #print(include)
     loggedItems =[]
     textBlock = []
     ifLines = []
+    lowerLevels = []
+    level = 0
+
+    check = 1
+
     for l in range(0,len(fileLines)):
-        if include:
-            textBlock.append(fileLines[l])
-        try: # Catch Short Lines
+        try:
+            #print(str(check) + ': ' +str(level)+': ' + ' '.join(fileLines[l]))
+
+            if check == 1:
+                textBlock.append(fileLines[l])
+            elif check == 2:
+                lowerLevels.append(fileLines[l])
+
             if fileLines[l][0].casefold() == 'IF'.casefold():
-                include = False
-                ifFail = True
-
-                if fileLines[l][1].casefold() == 'EVENT'.casefold():
-                    for event in events:
-                        if event == fileLines[l][3]:
-                            include = True
-                            ifFail = False
-                            break
-
-                elif fileLines[l][1].casefold() == 'SCENARIO'.casefold():
-                    for scenario in scenarios:
-                        if scenario == fileLines[l][3]:
-                            include = True
-                            ifFail = False
-                            break
-
-                textBlock.extend(tuflowBlockAssessment(fileLines[l+1:],include,ifFail))
-                break
+                level = level + 1
+                if level == 1:
+                    if (fileLines[l][1].casefold() == 'EVENT'.casefold() and fileLines[l][3] in events) or (fileLines[l][1].casefold() == 'SCENARIO'.casefold() and fileLines[l][3] in scenarios):
+                            check = 2
+                            lowerLevels = []
+                    else:
+                        check = 0
+                    continue
 
 
             if fileLines[l][0].casefold() == 'ELSE'.casefold():
-                if ifFail is True:
-                    try:
-                        if fileLines[l][1].casefold() == 'IF'.casefold():
-                            include = False
-                            ifFail = True
+                if level == 1:
+                    if check == 2: #currently completing an if, ignore rest of block
+                        check = -1
 
-                            if fileLines[l][2].casefold() == 'EVENT'.casefold():
-                                for event in events:
-                                    if event == fileLines[l][4]:
-                                        include = True
-                                        ifFail=False
-                                        break
+                    #elif check == 1: not possible
+                    elif check == 0:
+                        try:
+                            if fileLines[l][1].casefold() == 'IF'.casefold():
+                                if level == 1:
+                                    if (fileLines[l][2].casefold() == 'EVENT'.casefold() and fileLines[l][4] in events) or (fileLines[l][2].casefold() == 'SCENARIO'.casefold() and fileLines[l][4] in scenarios):
+                                            check = 2
+                                            lowerLevels = []
+                                    else:
+                                        check = 0
+                                    continue
+                        except:
+                            check = 2
+                            lowerLevels = []
 
-                            elif fileLines[l][2].casefold() == 'SCENARIO'.casefold():
-                                for scenario in scenarios:
-                                    if scenario == fileLines[l][4]:
-                                        include = True
-                                        ifFail=False
-                                        break
+                    #elif check == -1: do nothing, already completed a if/else if
 
-                            textBlock.extend(tuflowBlockAssessment(fileLines[l+1:],include,ifFail))
-                            break
-                        else: #else and somthing not if
-                            include = True
-                    except: #just else on the line
-                        include = True
-                else:
-                    include = False
+
 
 
             if ''.join(fileLines[l][:2]).casefold() == 'ENDIF'.casefold():
-                include = True
-
+                level = level - 1
+                if level == 0:
+                    textBlock.extend(tuflowBlockAssessment(lowerLevels,events,scenarios))
+                    lowerLevels = []
+                    check = 1
 
         except:
             pass
 
+    #print('END TBA')
     return textBlock
+
+
+
+    # for l in range(0,len(fileLines)):
+    #     print(include)
+    #     print(fileLines[l])
+    #     if include:
+    #         textBlock.append(fileLines[l])
+    #     try: # Catch Short Lines
+    #         if fileLines[l][0].casefold() == 'IF'.casefold():
+    #             include = False
+    #             ifFail = True
+    #
+                # if fileLines[l][1].casefold() == 'EVENT'.casefold():
+                #     if fileLines[l][3] in events:
+                #         include = True
+                #         ifFail = False
+                #         textBlock.extend(tuflowBlockAssessment(fileLines[l+1:],include,ifFail,events,scenarios))
+                #
+                #
+                # elif fileLines[l][1].casefold() == 'SCENARIO'.casefold():
+                #     if fileLines[l][3] in scenarios:
+                #         include = True
+                #         ifFail = False
+                #         textBlock.extend(tuflowBlockAssessment(fileLines[l+1:],include,ifFail,events,scenarios))
+    #
+    #
+    #             break
+    #
+    #
+    #         if fileLines[l][0].casefold() == 'ELSE'.casefold():
+    #             print('else')
+    #             if ifFail is True:
+    #                 try:
+    #                     if fileLines[l][1].casefold() == 'IF'.casefold():
+    #                         include = False
+    #                         ifFail = True
+    #
+    #                         if fileLines[l][2].casefold() == 'EVENT'.casefold():
+    #                             if fileLines[l][4] in events:
+    #                                 include = True
+    #                                 ifFail = False
+    #                                 textBlock.extend(tuflowBlockAssessment(fileLines[l+1:],include,ifFail,events,scenarios))
+    #
+    #                         elif fileLines[l][2].casefold() == 'SCENARIO'.casefold():
+    #                             if fileLines[l][4] in scenarios:
+    #                                 include = True
+    #                                 ifFail = False
+    #                                 textBlock.extend(tuflowBlockAssessment(fileLines[l+1:],include,ifFail,events,scenarios))
+    #
+    #                         break
+    #                     else: #else and somthing not if
+    #                         include = True
+    #                 except: #just else on the line
+    #                     include = True
+    #             else:
+    #                 print(ifFail)
+    #                 include = False
+    #
+    #
+    #         if ''.join(fileLines[l][:2]).casefold() == 'ENDIF'.casefold():
+    #             include = True
+    #
+    #
+    #     except:
+    #         pass
+    # print('FINISH TBA')
+    # return textBlock
 
 def tuflowTextAssessment(textBlock,workingFolder,homePath, events, scenarios, bcEvents):
     loggedItems=[]
