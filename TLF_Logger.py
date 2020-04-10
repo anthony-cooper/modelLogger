@@ -66,6 +66,19 @@ def tlfTextAssessment(textBlock):
 
                     except:
                         break
+            elif ''.join(textLine[:3]).casefold()  == '2DDomainTimesteps:'.casefold():
+                timesteps = ''.join(textLine[3:]).split(',')
+                for i in range(0, len(timesteps)):
+                    if timesteps[i]:
+                        loggedItems.append(('Timestep Domain '+str(i+1), timesteps[i]))
+            elif ''.join(textLine[:3]).casefold()  == 'Number2DCells:'.casefold():
+                loggedItems.append(('Total 2D Cells', textline[3]))
+
+            elif ''.join(textLine[:4]).casefold()  == '2DDomainCellSizes:'.casefold():
+                cellSizes = ''.join(textLine[4:]).split(',')
+                for i in range(0, len(cellSizes)):
+                    if cellSizes[i]:
+                        loggedItems.append(('Cell Size Domain '+str(i+1), cellSizes[i]))
 
 
 
