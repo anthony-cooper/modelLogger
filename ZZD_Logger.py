@@ -68,7 +68,7 @@ def zzdTextAssessment(textBlock):
                 while True:
                     try:
                         ne = next(text)
-                        if ''.join(ne[:2]) == 'Initialconditions':
+                        if ''.join(ne[:2]) == 'Initialconditions' or ' '.join(ne) == 'Using default initial conditions (from *.dat file)':
                             break
                         elif ne:
                             loggedItems.append(('Flood Modeller Modified Parameter',' '.join(ne)))
