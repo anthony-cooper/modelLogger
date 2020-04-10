@@ -67,6 +67,7 @@ def setup_Database(modelName, dbLoc):
     esTableFields.append(('esId','INTEGER PRIMARY KEY'))                      #table primary key
     esTableFields.append(('value','VARCHAR(255)'))                            #Scenario/event
     esTableFields.append(('type','INT'))                                      #event (true), scenario(false)
+    esTableFields.append(('optionNo','INT'))
 
     nsParasTableFields = []
     nsParasTableFields.append(('nsParasId','INTEGER PRIMARY KEY'))                      #table primary key
@@ -85,6 +86,7 @@ def setup_Database(modelName, dbLoc):
     simulation_file_LinksFields = []
     simulation_file_LinksFields.append(('simulationID','INTEGER'))                                           #Simulation ID - foreign key link
     simulation_file_LinksFields.append(('fileID','INTEGER'))                                                 #File ID - foreign key link
+    simulation_file_LinksFields.append(('logOrder','INTEGER'))
     simulation_file_LinksFields.append(('FOREIGN KEY(simulationID)','REFERENCES simulations(sId)'))      #Set up foreign key reference
     simulation_file_LinksFields.append(('FOREIGN KEY(fileID)','REFERENCES files(fId)'))                  #Set up foreign key reference
 
@@ -204,20 +206,20 @@ def log_file(db, file):
     else:
         return data[0]
 
-def link_sim_file(db, sId, fId):
+def link_sim_file(db, sId, fId, logOrder):
     cursor = db.cursor()
-    sqlCommand = 'INSERT INTO simulation_file(simulationID,fileID) VALUES (?,?)'
-    cursor.execute(sqlCommand,[sId,fId])
+    sqlCommand = 'INSERT INTO simulation_file(simulationID,fileID,logOrder) VALUES (?,?,?)'
+    cursor.execute(sqlCommand,[sId,fId,logOrder])
     db.commit()
 
-def log_es(db, value, type):
+def log_es(db, value, type, optionNo):
     cursor = db.cursor()
-    sqlCommand = 'SELECT esId FROM es WHERE value  = ? AND type = ?'
-    cursor.execute(sqlCommand,[value, type])
+    sqlCommand = 'SELECT esId FROM es WHERE value  = ? AND type = ? AND optionNo = ?'
+    cursor.execute(sqlCommand,[value, type, optionNo])
     data=cursor.fetchone()
     if data is None:
-        sqlCommand = 'INSERT INTO es(value, type) VALUES (?,?)'
-        cursor.execute(sqlCommand, [value, type])
+        sqlCommand = 'INSERT INTO es(value, type, optionNo) VALUES (?,?,?)'
+        cursor.execute(sqlCommand, [value, type, optionNo])
         db.commit()
         return cursor.lastrowid
     else:
@@ -265,14 +267,18 @@ def logSimulation_0_IEF(db,iefFilePath, mId, homePath):
 #def logSimulation_0_TCF(db,tcfPath, events, scenarios):
 
 def logSimulation_1_eventsScenarios(db, sId, events, scenarios):
+    optionNo = 0
     for event in events:
         if event:
-            esId = log_es(db, event,True)
+            esId = log_es(db, event,True,optionNo)
             link_sim_es(db,sId,esId)
+        optionNo = optionNo+1
+    optionNo = 0
     for scenario in scenarios:
         if scenario:
-            esId = log_es(db, scenario,False)
+            esId = log_es(db, scenario,False,optionNo)
             link_sim_es(db,sId,esId)
+        optionNo = optionNo+1
 
     print('events and scenarios logged')
 
@@ -281,7 +287,7 @@ def logSimulation_2_items(db,sId, inputFiles, events, scenarios):
     zzdPath = ''
     tlfFolderPath = ''
     tuflowSimulationName = ''
-
+    logOrder = 0
     for inputFile in inputFiles:
         if inputFile[2] == 'Flood Modeller Results Folder':
             zzdPath = os.path.join(homePath,inputFile[3]+'.zzd')
@@ -290,9 +296,8 @@ def logSimulation_2_items(db,sId, inputFiles, events, scenarios):
         elif inputFile[2] == 'TUFLOW Control File':
             tuflowSimulationName = genFileName(inputFile[0], events, scenarios)
             fId = log_file(db,inputFile)
-            if fId not in simFiles:
-                link_sim_file(db,sId,fId)
-                simFiles.append(log_file(db,inputFile))
+            link_sim_file(db,sId,fId,logOrder)
+            logOrder = logOrder + 1
             if not tlfFolderPath:
                 tlfFolderPath = os.path.join(homePath,tuflowSimulationName+'.tlf')
                 print(tlfFolderPath)
@@ -301,9 +306,8 @@ def logSimulation_2_items(db,sId, inputFiles, events, scenarios):
             print(inputFile[3])
         else:
             fId = log_file(db,inputFile)
-            if fId not in simFiles:
-                link_sim_file(db,sId,fId)
-                simFiles.append(log_file(db,inputFile))
+            link_sim_file(db,sId,fId,logOrder)
+            logOrder = logOrder + 1
 
     print('files logged')
 
@@ -339,7 +343,7 @@ def logSimulation_2_items(db,sId, inputFiles, events, scenarios):
 modelName = 'floodModel'
 dbLoc = r'C:\DevArea\TestDB'
 
-iefPath = r'C:\DevArea\TestModel\FM\IEF'
+iefPath = r'C:\Users\antho\Downloads\Model\Model\FloodModeller\IEF'
 
 versionName = 'TEST'
 versionNotes = ''
