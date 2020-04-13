@@ -100,44 +100,97 @@ def generate_header():
                 background-color: #ddd;
                 }
 
-            </style>'''
+            </style>
+
+
+            '''
 
     return html
 
-def generate_base(cursor, sId, mId):
-    sqlCommand = '''SELECT simulations.simName
-                    FROM simulations
-                    WHERE simulations.sId = ?'''
-
-    cursor.execute(sqlCommand,[sId])
-    simName=cursor.fetchone()[0]
-
-    sqlCommand = '''SELECT simulations.simName
+def generate_content(cursor, mId):
+    sqlCommand = '''SELECT simulations.sId, simulations.simName
                     FROM simulations, models, model_simulation
                     WHERE models.mId = ? AND model_simulation.modelID = model_simulation.simulationId'''
 
     cursor.execute(sqlCommand,[mId])
     data=cursor.fetchall()
+
+
     simulations=''
+    content=''
+    script='''<body onload="show'''+str(data[0][0])+'''()">
+    <script>
+                '''
     for item in data:
-        if item[0].count('_[') == 2:
-            simulations = simulations + '<tr><td>'+item[0].split('_[')[1][:-1]+'</td><td>'+item[0].split('_[')[2][:-1]+'</td></tr>'
+        if item[1].count('_[') == 2:
+            simulations = simulations + '''<tr id="row'''+str(item[0])+'''" onclick="show'''+str(item[0])+'''()"><td nowrap>'''+item[1].split('_[')[1][:-1]+'''</td><td>'''+item[1].split('_[')[2][:-1]+'''</td nowrap></tr>'''
         else:
-            simulations = simulations + '<tr><td>'+item[0]+'</td></tr>'
+            simulations = simulations + '''<tr id="row'''+str(item[0])+'''" onclick="show'''+str(item[0])+'''()"><td nowrap>'''+item[1]+'''</td></tr>'''
+
+        sqlCommand = '''SELECT simulations.simName
+                        FROM simulations
+                        WHERE simulations.sId = ?'''
+
+        cursor.execute(sqlCommand,[item[0]])
+        simName=cursor.fetchone()[0]
+
+        content=content+generate_base(cursor, item[0])
+
+        script =script+'''function show'''+str(item[0])+'''() {
+                    '''
+
+        for itemX in data:
+            if itemX[0] == item[0]:
+                script = script+'''document.getElementById("'''+str(itemX[0])+'''").style.display = "inherit";
+                    document.getElementById("row'''+str(itemX[0])+'''").style.color = "rgb(255, 255, 255)";
+                    document.getElementById("row'''+str(itemX[0])+'''").style.backgroundColor = "rgb(0, 0, 0)";
+                    document.getElementById("row'''+str(itemX[0])+'''").style.fontWeight = "bold";
+
+                    '''
+            else:
+                script = script+'''document.getElementById("'''+str(itemX[0])+'''").style.display = "none";
+                    document.getElementById("row'''+str(itemX[0])+'''").style.color = "inherit";
+                    document.getElementById("row'''+str(itemX[0])+'''").style.backgroundColor = "inherit";
+                    document.getElementById("row'''+str(itemX[0])+'''").style.fontWeight = "inherit";
+
+                    '''
+
+
+        script=script+'''document.getElementById("simTitle").innerHTML = "Model Log: '''+simName+'''"}
+                '''
+
+    script = script+'''
+                </script>
+        '''
 
     html='''<div class="grid-container-base">
             	<div class="grid-item"></div>
-            	<div class="grid-item">Model Log: '''+simName+'''</div>
+            	<div class="grid-item" id="simTitle">Model Log: Simulation Name</div>
             	<div><table>
-                    <tr><th>Simulations</th></tr>
+                    <tr><th colspan="2">Simulations</th></tr>
                     	'''+simulations+'''
                 </table></div>
-            	<div class="grid-container-types">'''
+
+            '''
+    html=script+'''
+
+    '''+html+content
+    html=html+'''</div>'''
+
+    return html
+
+def generate_base(cursor, sId):
+
+
+
+    html='''    <div class="grid-container-types" id="'''+str(sId)+'''">
+            '''
+
     html=html+generate_fm(cursor, sId)
     html=html+generate_tuf(cursor, sId)
     html=html+generate_files(cursor, sId)
-    html=html+'''</div>
-            </div>'''
+    html=html+'''   </div>
+            '''
 
     return html
 
@@ -150,7 +203,8 @@ def generate_fm(cursor, sId):
     data=cursor.fetchall()
     fmDetTable=''
     for item in data:
-        fmDetTable = fmDetTable + '<tr><td>'+item[0]+'</td><td>'+item[1]+'</td></tr>'
+        fmDetTable = fmDetTable + '''<tr><td>'''+item[0]+'''</td><td>'''+item[1]+'''</td></tr>
+                                    '''
 
 
     sqlCommand = '''SELECT nsParas.parameter
@@ -161,32 +215,34 @@ def generate_fm(cursor, sId):
     data=cursor.fetchall()
     fmModTable=''
     for item in data:
-        fmModTable = fmModTable + '<tr><td>'+item[0]+'</td></tr>'
+        fmModTable = fmModTable + '''<tr><td>'''+item[0]+'''</td></tr>
+                                    '''
 
 
 
 
 
-    html='''<div class="grid-container-type">
-    			<div class="grid-item">Flood Modeller Details</div>
-    			<div class="grid-container-fm">
-    				<div class="grid-container-type">
-    					<div class="grid-item-tableHeading">Simulation Details</div>
-    					<div><table>
-    						<tr><th>Parameter</th><th>Value</th></tr>
-    						'''+fmDetTable+'''
-    					</table></div>
-    				</div>
-    				<div class="grid-container-type">
-    					<div class="grid-item-tableHeading">Non-default parameters</div>
-    					<div><table>
-    						<tr><th>Change made</th></tr>
-    						'''+fmModTable+'''
-    					</table></div>
-    				</div>
-    				<div class="grid-item">Reserve for FM Plot</div>
-    			</div>
-    		</div>'''
+    html='''        <div class="grid-container-type">
+            			<div class="grid-item">Flood Modeller Details</div>
+            			<div class="grid-container-fm">
+            				<div class="grid-container-type">
+            					<div class="grid-item-tableHeading">Simulation Details</div>
+            					<div><table>
+            						<tr><th>Parameter</th><th>Value</th></tr>
+            						'''+fmDetTable+'''
+            					</table></div>
+            				</div>
+            				<div class="grid-container-type">
+            					<div class="grid-item-tableHeading">Non-default parameters</div>
+            					<div><table>
+            						<tr><th>Change made</th></tr>
+            						'''+fmModTable+'''
+            					</table></div>
+            				</div>
+            				<div class="grid-item">Reserve for FM Plot</div>
+            			</div>
+            		</div>
+            '''
     return html
 
 def generate_tuf(cursor, sId):
@@ -198,22 +254,24 @@ def generate_tuf(cursor, sId):
     data=cursor.fetchall()
     tufDetTable=''
     for item in data:
-        tufDetTable = tufDetTable + '<tr><td>'+item[0]+'</td><td>'+item[1]+'</td></tr>'
+        tufDetTable = tufDetTable + '''<tr><td>'''+item[0]+'''</td><td>'''+item[1]+'''</td></tr>
+                                    '''
 
 
-    html='''<div class="grid-container-type">
-    			<div class="grid-item">TUFLOW Details</div>
-    			<div class="grid-container-tuf">
-    				<div class="grid-container-type">
-    					<div class="grid-item-tableHeading">Simulation Details</div>
-    					<div><table>
-    						<tr><th>Parameter</th><th>Value</th></tr>
-    						'''+tufDetTable+'''
-    					</table></div>
-    				</div>
-    				<div class="grid-item">Reserve for MB plot</div>
-    			</div>
-    		</div>'''
+    html='''        <div class="grid-container-type">
+            			<div class="grid-item">TUFLOW Details</div>
+            			<div class="grid-container-tuf">
+            				<div class="grid-container-type">
+            					<div class="grid-item-tableHeading">Simulation Details</div>
+            					<div><table>
+            						<tr><th>Parameter</th><th>Value</th></tr>
+            						'''+tufDetTable+'''
+            					</table></div>
+            				</div>
+            				<div class="grid-item">Reserve for MB plot</div>
+            			</div>
+            		</div>
+            '''
     return html
 
 def generate_files(cursor, sId):
@@ -233,22 +291,23 @@ def generate_files(cursor, sId):
             notes = item[4]
         elif item[5]:
             notes=item[5]
-        filesTable = filesTable + '<tr><td>'+item[0]+'</td><td>'+item[1]+'</td><td>'+item[2]+'</td><td>'+item[3]+'</td><td>'+notes+'</td></tr>'
+        filesTable = filesTable + '''<tr><td>'''+item[0]+'''</td><td>'''+item[1]+'''</td><td>'''+item[2]+'''</td><td>'''+item[3]+'''</td><td>'''+notes+'''</td></tr>
+                                    '''
 
 
-    html='''<div class="grid-container-type">
-    			<div class="grid-item">Simulation Files</div>
-    			<div class="grid-container-fil">
-    					<div><div style="overflow-x:auto;"><table>
-    						<tr><th>File Name</th><th>File Extension</th><th>File Type</th><th>File Path</th><th>Read in Settings/Notes</th></tr>
-    						'''+filesTable+'''
-    					</table></div>
-    				</div>
-    			</div>
-    		</div>'''
+    html='''        <div class="grid-container-type">
+            			<div class="grid-item">Simulation Files</div>
+            			<div class="grid-container-fil">
+            					<div><table>
+            						<tr><th>File Name</th><th>File Extension</th><th>File Type</th><th>File Path</th><th>Read in Settings/Notes</th></tr>
+            						'''+filesTable+'''
+            					</table></div>
+            			</div>
+            		</div>
+            '''
     return html
 
-def generate_sim():
+def generate_log():
     modelName = 'floodModel'
     dbLoc = r'C:\DevArea\TestDB'
 
@@ -259,9 +318,9 @@ def generate_sim():
     db = sqlite3.connect(os.path.join(dbLoc,modelName+'.sqlite3'))
     cursor = db.cursor()
 
-    html=generate_header()+generate_base(cursor, sId, mId)
+    html=generate_header()+generate_content(cursor, mId)
     f = open(os.path.join(dbLoc,modelName+'.html'), "w")
     f.write(html)
     f.close()
 
-generate_sim()
+generate_log()
