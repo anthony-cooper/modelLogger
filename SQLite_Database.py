@@ -1,5 +1,7 @@
 import sqlite3
 import os
+import pathlib #Used to rseolve relative paths; Requires python 3.4
+import csv
 import datetime
 from TUFLOW_Logger import tuflowLogger
 from FloodModeller_Logger import fmLogger
@@ -35,6 +37,27 @@ def setup_Database(modelName, dbLoc):
     simulationExtrasTableFields.append(('software','INT'))
     simulationExtrasTableFields.append(('FOREIGN KEY (simulationID)','REFERENCES simulations (sId)'))
 
+    mbTableFields = []
+    mbTableFields.append(('simulationId', 'INTEGER'))
+    mbTableFields.append(('time','REAL'))
+    mbTableFields.append(('oneDandTwoD','VARCHAR(255)'))
+    mbTableFields.append(('HVolIn','REAL'))
+    mbTableFields.append(('HVolOut','REAL'))
+    mbTableFields.append(('QVolIn','REAL'))
+    mbTableFields.append(('QVolOut','REAL'))
+    mbTableFields.append(('TotVolIn','REAL'))
+    mbTableFields.append(('TotVolOut','REAL'))
+    mbTableFields.append(('VolImO','REAL'))
+    mbTableFields.append(('dVol','REAL'))
+    mbTableFields.append(('VolErr','REAL'))
+    mbTableFields.append(('QMe','REAL'))
+    mbTableFields.append(('VolIpO','REAL'))
+    mbTableFields.append(('TotVol','REAL'))
+    mbTableFields.append(('CumVolIpO','REAL'))
+    mbTableFields.append(('CumVolErr','REAL'))
+    mbTableFields.append(('CumME','REAL'))
+    mbTableFields.append(('CumQME','REAL'))
+    mbTableFields.append(('FOREIGN KEY (simulationID)','REFERENCES simulations (sId)'))
 
 
 
@@ -130,6 +153,8 @@ def setup_Database(modelName, dbLoc):
     # databaseTables.append(('comments',commentTableFields))
     databaseTables.append(('model_simulation',model_simulation_LinksFields))
     databaseTables.append(('simulation_file',simulation_file_LinksFields))
+    databaseTables.append(('TUFmb',mbTableFields))
+
     # databaseTables.append(('file_file',file_file_LinksFields))
     # databaseTables.append(('comments_ALL',comment_ALL_LinksFields))
     databaseTables.append(('es',esTableFields))
@@ -259,7 +284,7 @@ def logSimulation_0_IEF(db,iefFilePath, mId, homePath):
     print('simulation created simulation ID: ' + str(sId))
 
     logSimulation_1_eventsScenarios(db, sId, inputs[1], inputs[2])
-    logSimulation_2_items(db, sId, inputs[0], inputs[1], inputs[2])
+    logSimulation_2_items(db, sId, inputs[0], inputs[1], inputs[2], homePath)
 
     print('********** SIMULATION LOGGED **********')
 
@@ -282,12 +307,13 @@ def logSimulation_1_eventsScenarios(db, sId, events, scenarios):
 
     print('events and scenarios logged')
 
-def logSimulation_2_items(db,sId, inputFiles, events, scenarios):
+def logSimulation_2_items(db,sId, inputFiles, events, scenarios, homePath):
     simFiles = []
     zzdPath = ''
     tlfFolderPath = ''
     tuflowSimulationName = ''
     logOrder = 0
+    outputFolder=''
     for inputFile in inputFiles:
         if inputFile[2] == 'Flood Modeller Results Folder':
             zzdPath = os.path.join(homePath,inputFile[3]+'.zzd')
@@ -303,13 +329,19 @@ def logSimulation_2_items(db,sId, inputFiles, events, scenarios):
                 print(tlfFolderPath)
 
         elif inputFile[2] in ['Output Folder', 'Write Check Files']:
-            print(inputFile[3])
+            if inputFile[2] == 'Output Folder':
+                outputFolder = inputFile[3]
+            else:
+                print(inputFile[3])
         else:
             fId = log_file(db,inputFile)
             link_sim_file(db,sId,fId,logOrder)
             logOrder = logOrder + 1
 
     print('files logged')
+
+    if outputFolder and tuflowSimulationName:
+        logTUFmb(db, sId, outputFolder, tuflowSimulationName, homePath)
 
     if zzdPath:
         try: #ZZD Exists
@@ -337,6 +369,30 @@ def logSimulation_2_items(db,sId, inputFiles, events, scenarios):
         print('tlf logged')
     except:
         print('tlf log failed, probably doesn\'t exist')
+
+def logTUFmb(db, sId, outputFolder, tuflowSimulationName, homePath):
+    try:
+        mbPath = os.path.join(homePath, outputFolder, tuflowSimulationName + '_MB.csv')
+        if not os.path.isabs(mbPath):
+            filePath = pathlib.Path(filePath).resolve()
+        print(mbPath)
+        cursor = db.cursor()
+        sqlCommand = 'INSERT INTO TUFmb(simulationId,time,oneDandTwoD,HVolIn,HVolOut,QVolIn,QVolOut,TotVolIn,TotVolOut,VolImO,dVol,VolErr,QMe,VolIpO,TotVol,CumVolIpO,CumVolErr,CumME,CumQME) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
+
+        with open(mbPath,'r') as file:
+            reader = csv.reader(file)
+            next(reader)
+            for line in reader:
+                values = [sId]
+                values.extend(line)
+                cursor.execute(sqlCommand,values)
+        db.commit()
+
+        file.close
+
+
+    except:
+        print('couldn\'t log MB, probably not found')
 
 
 

@@ -5,7 +5,10 @@ import os
 
 
 def generate_header():
-    html='''<style>
+    html='''<html>
+<head>
+
+    <style>
                 .grid-container-base {
                   display: grid;
                   grid-template-columns: 200px auto;
@@ -118,7 +121,7 @@ def generate_content(cursor, mId):
 
     simulations=''
     content=''
-    script='''<body onload="show'''+str(data[0][0])+'''()">
+    script='''
     <script>
                 '''
     for item in data:
@@ -159,9 +162,25 @@ def generate_content(cursor, mId):
         script=script+'''document.getElementById("simTitle").innerHTML = "Model Log: '''+simName+'''"}
                 '''
 
+
+
     script = script+'''
                 </script>
-        '''
+
+'''
+    script=script + '''<script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+<script type="text/javascript">
+
+window.onload = function show() {
+'''
+    for item in data:
+        script=script+genTUFmbPlot(cursor, item[0])
+
+    script=script+'''show'''+str(data[0][0])+'''()
+}
+</script>
+
+</head>'''
 
     html='''<div class="grid-container-base">
             	<div class="grid-item"></div>
@@ -175,7 +194,8 @@ def generate_content(cursor, mId):
     html=script+'''
 
     '''+html+content
-    html=html+'''</div>'''
+    html=html+'''</div>
+</html>'''
 
     return html
 
@@ -268,11 +288,61 @@ def generate_tuf(cursor, sId):
             						'''+tufDetTable+'''
             					</table></div>
             				</div>
-            				<div class="grid-item">Reserve for MB plot</div>
+            				<div><div id="chart'''+str(sId)+'''" style="height: 100%; width: 100%;"></div></div>
             			</div>
             		</div>
             '''
     return html
+
+def genTUFmbPlot(cursor, sId):
+    script = '''	var chart'''+str(sId)+''' = new CanvasJS.Chart("chart'''+str(sId)+'''", {
+		title:{
+			text: "TUFLOW Plot"
+		},
+		axisX:{
+		title: "Time (hrs)",
+		crosshair: {
+			enabled: true,
+			snapToDataPoint: true
+		}
+		},
+		axisY: {
+		title: "%",
+		crosshair: {
+			enabled: true,
+			snapToDataPoint: true,
+		}
+		},
+		data: [
+        		{
+			type: "line",
+			dataPoints: ['''
+
+
+
+    sqlCommand = '''SELECT TUFmb.time, TUFmb.CumQME
+                    FROM TUFmb
+                    WHERE TUFmb.simulationId = ?
+                    ORDER BY TUFmb.time'''
+    cursor.execute(sqlCommand,[sId])
+    data=cursor.fetchall()
+    #print(script)
+    #print(data)
+    if data:
+        for item in data:
+            script = script + '''{ x: '''+str(item[0])+''', y: '''+str(item[1])+''' },
+                            '''
+        script = script + ''']
+		}
+		]
+	});
+	chart'''+str(sId)+'''.render();
+'''
+        #print(script)
+        return script
+    else:
+        return ''
+
 
 def generate_files(cursor, sId):
     sqlCommand = '''SELECT files.fileName, files.fileExt, files.type, files.path, files.readInSettings, files.notes
@@ -324,3 +394,10 @@ def generate_log():
     f.close()
 
 generate_log()
+# modelName = 'floodModel'
+# dbLoc = r'C:\DevArea\TestDB'
+#
+# db = sqlite3.connect(os.path.join(dbLoc,modelName+'.sqlite3'))
+# cursor = db.cursor()
+# sId = 1
+# genTUFmbPlot(cursor, sId)
