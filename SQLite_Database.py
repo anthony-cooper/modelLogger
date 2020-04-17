@@ -8,6 +8,7 @@ from FloodModeller_Logger import fmLogger
 from TLF_Logger import tlfLogger
 from ZZD_Logger import zzdLogger
 from tuflow_variableLogic import genFileName
+from lf1_logger import lf1Logger
 
 
 def setup_Database(modelName, dbLoc):
@@ -58,6 +59,23 @@ def setup_Database(modelName, dbLoc):
     mbTableFields.append(('CumME','REAL'))
     mbTableFields.append(('CumQME','REAL'))
     mbTableFields.append(('FOREIGN KEY (simulationID)','REFERENCES simulations (sId)'))
+
+    lfTableFields = []
+    lfTableFields.append(('simulationId', 'INTEGER'))
+    lfTableFields.append(('time','REAL'))
+    lfTableFields.append(('iterations','REAL'))
+    lfTableFields.append(('timestep','REAL'))
+    lfTableFields.append(('flowCon','REAL'))
+    lfTableFields.append(('levelCon','REAL'))
+    lfTableFields.append(('qtol','REAL'))
+    lfTableFields.append(('htol','REAL'))
+    lfTableFields.append(('inflow','REAL'))
+    lfTableFields.append(('outflow','REAL'))
+    lfTableFields.append(('massError','REAL'))
+    lfTableFields.append(('maxitr','REAL'))
+    lfTableFields.append(('minitr','REAL'))
+    lfTableFields.append(('FOREIGN KEY (simulationID)','REFERENCES simulations (sId)'))
+
 
 
 
@@ -154,6 +172,7 @@ def setup_Database(modelName, dbLoc):
     databaseTables.append(('model_simulation',model_simulation_LinksFields))
     databaseTables.append(('simulation_file',simulation_file_LinksFields))
     databaseTables.append(('TUFmb',mbTableFields))
+    databaseTables.append(('FMlf',lfTableFields))
 
     # databaseTables.append(('file_file',file_file_LinksFields))
     # databaseTables.append(('comments_ALL',comment_ALL_LinksFields))
@@ -285,6 +304,7 @@ def logSimulation_0_IEF(db,iefFilePath, mId, homePath):
 
     logSimulation_1_eventsScenarios(db, sId, inputs[1], inputs[2])
     logSimulation_2_items(db, sId, inputs[0], inputs[1], inputs[2], homePath)
+    logFMlf(db, sId, iefFilePath)
 
     print('********** SIMULATION LOGGED **********')
 
@@ -370,11 +390,35 @@ def logSimulation_2_items(db,sId, inputFiles, events, scenarios, homePath):
     except:
         print('tlf log failed, probably doesn\'t exist')
 
+def logFMlf(db, sId, iefFilePath):
+    try:
+        lfPath = os.path.splitext(iefFilePath)[0] + '.lf1'
+        if not os.path.isabs(lfPath):
+            lfPath = pathlib.Path(lfPath).resolve()
+        #print(lfPath)
+        cursor = db.cursor()
+        sqlCommand = 'INSERT INTO FMlf(simulationId,time,inflow,outflow,flowCon,qtol,levelCon,htol,iterations,maxitr,minitr,timestep,massError) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)'
+
+        lfLines = lf1Logger(lfPath)
+        print(lfLines)
+        for line in lfLines:
+            values = [sId]
+            values.extend(line)
+            cursor.execute(sqlCommand,values)
+        db.commit()
+
+
+
+    except:
+        print('couldn\'t log lf1, probably not found')
+
+
+
 def logTUFmb(db, sId, outputFolder, tuflowSimulationName, homePath):
     try:
         mbPath = os.path.join(homePath, outputFolder, tuflowSimulationName + '_MB.csv')
         if not os.path.isabs(mbPath):
-            filePath = pathlib.Path(filePath).resolve()
+            mbPath = pathlib.Path(mbPath).resolve()
         print(mbPath)
         cursor = db.cursor()
         sqlCommand = 'INSERT INTO TUFmb(simulationId,time,oneDandTwoD,HVolIn,HVolOut,QVolIn,QVolOut,TotVolIn,TotVolOut,VolImO,dVol,VolErr,QMe,VolIpO,TotVol,CumVolIpO,CumVolErr,CumME,CumQME) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'

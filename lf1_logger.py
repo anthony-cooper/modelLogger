@@ -1,4 +1,4 @@
-def lf1_logger(lf1File):
+def lf1Logger(lf1File):
     loggedItems =[]
     time=0
     iterations=0
@@ -51,5 +51,3 @@ def lf1_logger(lf1File):
     file.close
 
     return loggedItems
-
-print(lf1_logger(r'C:\Users\anthony.cooper\Desktop\Severn\IEF\SevernTidal_[F01-00_EP2006-NC_T50-00_EP2006-NC]_[RES1R_002].lf1'))
