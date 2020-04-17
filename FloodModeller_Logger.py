@@ -29,11 +29,10 @@ def fmFileAssessment(textFile,homePath):
     #Split lines into lists using ' ' and tab as delimters
     fileLines =[]
     for line in file:
-        fileLines.append(line.split('='))
+        fileLines.append((line.strip()).split('='))
     file.close
 
     workingFolder=path.dirname(textFile)
-
     files, events, scenarios = fmTextAssessment(fileLines,workingFolder,homePath)
     loggedItems.extend(files)
 
@@ -104,7 +103,6 @@ def genLogItem(file, fileType,workingFolder,homePath):
     readNotes = ''
     loggedItems = []
     fileExists = True
-
     filePath = resolveFilePath(file.strip(),workingFolder,homePath)
     try:
         fullPath = path.join(homePath,filePath)
@@ -118,6 +116,7 @@ def genLogItem(file, fileType,workingFolder,homePath):
 def resolveFilePath(filePath,workingFolder,homePath):
     if not path.isabs(filePath):
         filePath = path.join(workingFolder +'\\'+ filePath)
-        filePath = pathlib.Path(filePath).resolve()
+    filePath = pathlib.Path(filePath).resolve()
+    homePath = pathlib.Path(homePath).resolve()
     filePath = path.relpath(filePath, start = homePath)
     return filePath

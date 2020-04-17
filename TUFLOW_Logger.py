@@ -348,6 +348,8 @@ def genLogItem(textLine,workingFolder,homePath):
 def resolveFilePath(filePath,workingFolder,homePath):
     if not path.isabs(filePath):
         filePath = path.join(workingFolder +'\\'+ filePath)
-        filePath = pathlib.Path(filePath).resolve()
+    filePath = pathlib.Path(filePath).resolve()
+    homePath = pathlib.Path(homePath).resolve()
+
     filePath = path.relpath(filePath, start = homePath)
     return filePath
