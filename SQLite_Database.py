@@ -400,7 +400,7 @@ def logFMlf(db, sId, iefFilePath):
         sqlCommand = 'INSERT INTO FMlf(simulationId,time,inflow,outflow,flowCon,qtol,levelCon,htol,iterations,maxitr,minitr,timestep,massError) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)'
 
         lfLines = lf1Logger(lfPath)
-        print(lfLines)
+        #print(lfLines)
         for line in lfLines:
             values = [sId]
             values.extend(line)

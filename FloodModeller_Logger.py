@@ -50,7 +50,7 @@ def fmTextAssessment(textBlock,workingFolder,homePath):
         try: #Catch errors from short lines, needs to check in order of number of words
             if textLine[0].casefold()  == 'Datafile'.casefold():
                 loggedItems.extend(genLogItem(textLine[1], 'Flood Modeller Network Data',workingFolder,homePath))
-                print('x')
+                #print('x')
             elif textLine[0].casefold()  == 'InitialConditions'.casefold():
                 loggedItems.extend(genLogItem(textLine[1],'Flood Modeller Initial Conditions',workingFolder,homePath))
             elif textLine[0].casefold()  == 'EventData'.casefold():
