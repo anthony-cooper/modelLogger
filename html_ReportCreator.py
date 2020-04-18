@@ -30,17 +30,23 @@ def generate_header():
                 .grid-container-fm {
                   padding: 8px;
                   display: grid;
-                  grid-template-columns: auto auto auto;
-                  grid-template-rows: auto;
+                  grid-template-columns: 33% 33% 34%;
+                  grid-template-rows: auto 400px;
                   background-color: rgba(0, 0, 255, 0.3);
                 }
                 .grid-container-tuf {
                   padding: 8px;
                   display: grid;
-                  grid-template-columns: auto auto;
+                  grid-template-columns: 50% 50%;
                   grid-template-rows: auto;
                   background-color: rgba(255, 0, 0, 0.3);
                 }
+                .grid-container-tufPlots {
+                  display: grid;
+                  grid-template-columns: auto;
+                  grid-template-rows: 50% 50%;
+                }
+
                 .grid-container-fil {
                   padding: 8px;
                   display: grid;
@@ -70,10 +76,12 @@ def generate_header():
                   font-weight: bold;
                 }
 				.chartDiv-TUFmb {
-                    border: 1px solid #ddd;
-                    backgroundColor: 'white';
-					max-width: 600px;
-					max-height: 300px;
+                  border: 1px solid rgba(0, 0, 0, 0.8);
+                    background-color: rgba(255, 255, 255, 0.6);
+					min-width: 400px;
+                    width: 100%;
+					min-height: 400px;
+                    height: 100%
 				}
 
                 table {
@@ -122,7 +130,7 @@ def generate_content(cursor, mId):
 
     cursor.execute(sqlCommand,[mId])
     data=cursor.fetchall()
-    data = data[0:1]
+    #data = data[0:1] # Only do first element
 
 
     simulations=''
@@ -207,7 +215,7 @@ def generate_content(cursor, mId):
 
 
     for item in data:
-        sqlCommand = '''SELECT TUFmb.time, TUFmb.CumQME
+        sqlCommand = '''SELECT TUFmb.time, TUFmb.CumQME, TUFmb.HVolIn, TUFmb.HVolOut, TUFmb.QVolIn, TUFmb.QVolOut, TUFmb.TotVolIn, TUFmb.TotVolOut
                         FROM TUFmb
                         WHERE TUFmb.simulationId = ?
                         ORDER BY TUFmb.time'''
@@ -215,7 +223,7 @@ def generate_content(cursor, mId):
         data=cursor.fetchall()
         tdata = list(zip(*data))
         if not tdata:
-            tdata = [[0],[0]]
+            tdata = [[0],[0],[0],[0],[0],[0],[0],[0]]
 
         #print(', '.join(map(str,tdata[1])))
 
@@ -228,7 +236,8 @@ def generate_content(cursor, mId):
                 label: 'Cum. Q ME',
                 fill: false,
                 pointRadius: 0,
-                borderColor: 'orange',
+                borderColor: 'purple',
+                borderWidth: 1,
                 data: ['''+', '.join(map(str,tdata[1]))+''']
                 }
             ]
@@ -236,91 +245,16 @@ def generate_content(cursor, mId):
         options: {
             responsive: false,
             maintainAspectRatio: false,
-            legend: {
-                display: true,
-                position: 'right',
-            },
-            scales: {
-					xAxes: [{
-						display: true,
-						scaleLabel: {
-							display: true,
-							labelString: 'Time'
-						}
-					}],
-					yAxes: [{
-						display: true,
-						scaleLabel: {
-							display: true,
-							labelString: '%'
-						}
-					}]
-				}
-        }
-});
-'''
-
-        sqlCommand = '''SELECT FMlf.time, FMlf.flowCon, FMlf.qtol, FMlf.levelCon, FMlf.htol, FMlf.maxitr, FMlf.minitr, FMlf.iterations, FMlf.massError
-                        FROM FMlf
-                        WHERE FMlf.simulationId = ?
-                        ORDER BY FMlf.time'''
-        cursor.execute(sqlCommand,[item[0]])
-        data=cursor.fetchall()
-        tdata = list(zip(*data))
-        if not tdata:
-            tdata = [[0],[0],[0],[0],[0],[0],[0],[0],[0]]
-
-        #print(', '.join(map(str,tdata[1])))
-
-        script = script +'''var FMConChart'''+str(item[0])+''' = new Chart(document.getElementById('FMConChart'''+str(item[0])+''''), {
-        type: 'line',
-        data: {
-            labels: ['''+', '.join(map(str,tdata[0]))+'''],
-            datasets: [
-                {
-                label: 'Flow Convergence',
-                fill: false,
-                pointRadius: 0,
-                borderColor: 'red',
-                data: ['''+', '.join(map(str,tdata[1]))+''']
-                },
-                {
-                label: 'Flow Tolerance',
-                fill: false,
-                pointRadius: 0,
-                borderColor: 'red',
-                borderDash: [5,5],
-                borderDashOffset: 0,
-
-
-                data: ['''+', '.join(map(str,tdata[2]))+''']
-                },
-                {
-                label: 'Level Convergence',
-                fill: false,
-                pointRadius: 0,
-                borderColor: 'blue',
-
-                data: ['''+', '.join(map(str,tdata[3]))+''']
-                },
-                {
-                label: 'Level Tolerance',
-                fill: false,
-                pointRadius: 0,
-                borderColor: 'blue',
-                borderDash: [5,5],
-                borderDashOffset: 5,
-
-                data: ['''+', '.join(map(str,tdata[4]))+''']
-                }
-
-            ]
-        },
-        options: {
-            responsive: false,
-            maintainAspectRatio: false,
+            title: {
+					display: true,
+					text: 'TUFLOW Mass Balance'
+				},
             tooltips: {
-                mode: 'index'
+                mode: 'index',
+                intersect: false,
+                titleFontSize: 10,
+                bodyFontSize: 10,
+                displayColors: false
             },
             layout: {
                 padding: {
@@ -349,14 +283,15 @@ def generate_content(cursor, mId):
                             minRotation: 0,
                             fontSize: 10,
                             fontColor: 'black',
-                            padding: 2
+                        },
+                        gridLines: {
+                            drawTicks: false
                         },
 						scaleLabel: {
 							display: true,
 							labelString: 'Time',
                             fontSize: 10,
                             fontColor: 'black',
-                            padding: 2
 						}
 					}],
 					yAxes: [{
@@ -366,11 +301,16 @@ def generate_content(cursor, mId):
                             minRotation: 0,
                             fontSize: 10,
                             fontColor: 'black',
-                            padding: 2
                         },
-
+                        gridLines: {
+                            drawTicks: false
+                        },
 						scaleLabel: {
-							display: false,
+							display: true,
+							labelString: '%',
+                            fontSize: 10,
+                            fontColor: 'black',
+
 						}
 					}]
 				}
@@ -378,6 +318,572 @@ def generate_content(cursor, mId):
 });
 '''
 
+        script = script +'''var TUFVolChart'''+str(item[0])+''' = new Chart(document.getElementById('TUFVolChart'''+str(item[0])+''''), {
+        type: 'line',
+        data: {
+            labels: ['''+', '.join(map(str,tdata[0]))+'''],
+            datasets: [
+                {
+                label: 'Vol. In (Stage Bdys)',
+                fill: false,
+                pointRadius: 0,
+                borderColor: 'brown',
+                borderWidth: 1,
+                data: ['''+', '.join(map(str,tdata[2]))+''']
+                },
+                {
+                label: 'Vol. Out (Stage Bdys)',
+                fill: false,
+                pointRadius: 0,
+                borderColor: 'hotpink',
+                borderWidth: 1,
+                data: ['''+', '.join(map(str,tdata[3]))+''']
+                },
+                {
+                label: 'Vol. In (Flow Bdys)',
+                fill: false,
+                pointRadius: 0,
+                borderColor: 'green',
+                borderWidth: 1,
+                data: ['''+', '.join(map(str,tdata[4]))+''']
+                },
+                {
+                label: 'Vol. Out (Flow Bdys)',
+                fill: false,
+                pointRadius: 0,
+                borderColor: 'orange',
+                borderWidth: 1,
+                data: ['''+', '.join(map(str,tdata[5]))+''']
+                },
+                {
+                label: 'Vol. In (Total)',
+                fill: false,
+                pointRadius: 0,
+                borderColor: 'red',
+                borderWidth: 2,
+                data: ['''+', '.join(map(str,tdata[6]))+''']
+                },
+                {
+                label: 'Vol. Out (Total)',
+                fill: false,
+                pointRadius: 0,
+                borderColor: 'blue',
+                borderWidth: 2,
+                data: ['''+', '.join(map(str,tdata[7]))+''']
+                },
+            ]
+        },
+        options: {
+            responsive: false,
+            maintainAspectRatio: false,
+            title: {
+					display: true,
+					text: 'TUFLOW Volumes'
+				},
+            tooltips: {
+                mode: 'index',
+                intersect: false,
+                titleFontSize: 10,
+                bodyFontSize: 10,
+                displayColors: false
+            },
+            layout: {
+                padding: {
+                    left: 0,
+                    right: 0,
+                    top: 0,
+                    bottom: 0
+                }
+            },
+
+            legend: {
+                display: true,
+                position: 'bottom',
+                labels: {
+                    fontSize: 10,
+                    fontColor: 'black',
+                    padding: 4
+                }
+            },
+            scales: {
+					xAxes: [{
+						display: true,
+                        maxRotation: 0,
+                        ticks: {
+                            maxRotation: 0,
+                            minRotation: 0,
+                            fontSize: 10,
+                            fontColor: 'black',
+                        },
+                        gridLines: {
+                            drawTicks: false
+                        },
+						scaleLabel: {
+							display: true,
+							labelString: 'Time',
+                            fontSize: 10,
+                            fontColor: 'black',
+						}
+					}],
+					yAxes: [{
+						display: true,
+                        ticks: {
+                            maxRotation: 0,
+                            minRotation: 0,
+                            fontSize: 10,
+                            fontColor: 'black',
+                        },
+                        gridLines: {
+                            drawTicks: false
+                        },
+						scaleLabel: {
+							display: true,
+							labelString: 'Volume (m3)',
+                            fontSize: 10,
+                            fontColor: 'black',
+
+						}
+					}]
+				}
+        }
+});
+'''
+
+
+        sqlCommand = '''SELECT FMlf.time, FMlf.flowCon, FMlf.qtol, FMlf.levelCon, FMlf.htol, FMlf.inflow, FMlf.outflow, FMlf.maxitr, FMlf.minitr, FMlf.iterations, FMlf.massError
+                        FROM FMlf
+                        WHERE FMlf.simulationId = ?
+                        ORDER BY FMlf.time'''
+        cursor.execute(sqlCommand,[item[0]])
+        data=cursor.fetchall()
+        tdata = list(zip(*data))
+        if not tdata:
+            tdata = [[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0]]
+
+        #print(', '.join(map(str,tdata[1])))
+
+        script = script +'''var FMConChart'''+str(item[0])+''' = new Chart(document.getElementById('FMConChart'''+str(item[0])+''''), {
+        type: 'line',
+        data: {
+            labels: ['''+', '.join(map(str,tdata[0]))+'''],
+            datasets: [
+                {
+                label: 'Flow Convergence',
+                fill: false,
+                pointRadius: 0,
+                borderColor: 'red',
+                borderWidth: 1,
+                data: ['''+', '.join(map(str,tdata[1]))+''']
+                },
+                {
+                label: 'Flow Tolerance',
+                fill: false,
+                pointRadius: 0,
+                borderColor: 'red',
+                borderDash: [5,5],
+                borderDashOffset: 0,
+                borderWidth: 1,
+
+
+                data: ['''+', '.join(map(str,tdata[2]))+''']
+                },
+                {
+                label: 'Level Convergence',
+                fill: false,
+                pointRadius: 0,
+                borderColor: 'blue',
+                borderWidth: 1,
+
+                data: ['''+', '.join(map(str,tdata[3]))+''']
+                },
+                {
+                label: 'Level Tolerance',
+                fill: false,
+                pointRadius: 0,
+                borderColor: 'blue',
+                borderDash: [5,5],
+                borderDashOffset: 5,
+                borderWidth: 1,
+
+                data: ['''+', '.join(map(str,tdata[4]))+''']
+                }
+
+            ]
+        },
+        options: {
+            responsive: false,
+            maintainAspectRatio: false,
+            title: {
+					display: true,
+					text: 'FM Convergence'
+				},
+
+            tooltips: {
+                mode: 'index',
+                intersect: false,
+                titleFontSize: 10,
+                bodyFontSize: 10,
+                displayColors: false
+            },
+            layout: {
+                padding: {
+                    left: 0,
+                    right: 0,
+                    top: 0,
+                    bottom: 0
+                }
+            },
+
+            legend: {
+                display: true,
+                position: 'bottom',
+                labels: {
+                    fontSize: 10,
+                    fontColor: 'black',
+                    padding: 4
+                }
+            },
+            scales: {
+					xAxes: [{
+						display: true,
+                        maxRotation: 0,
+                        ticks: {
+                            maxRotation: 0,
+                            minRotation: 0,
+                            fontSize: 10,
+                            fontColor: 'black',
+                        },
+                        gridLines: {
+                            drawTicks: false
+                        },
+						scaleLabel: {
+							display: true,
+							labelString: 'Time',
+                            fontSize: 10,
+                            fontColor: 'black',
+						}
+					}],
+					yAxes: [{
+						display: true,
+                        ticks: {
+                            maxRotation: 0,
+                            minRotation: 0,
+                            fontSize: 10,
+                            fontColor: 'black',
+                        },
+                        gridLines: {
+                            drawTicks: false
+                        },
+						scaleLabel: {
+							display: true,
+							labelString: 'Convergence',
+                            fontSize: 10,
+                            fontColor: 'black',
+						}
+					}]
+				}
+        }
+});
+'''
+        script = script +'''var FMIOChart'''+str(item[0])+''' = new Chart(document.getElementById('FMIOChart'''+str(item[0])+''''), {
+        type: 'line',
+        data: {
+            labels: ['''+', '.join(map(str,tdata[0]))+'''],
+            datasets: [
+                {
+                label: 'Inflow',
+                fill: false,
+                pointRadius: 0,
+                borderColor: 'green',
+                borderWidth: 1,
+                data: ['''+', '.join(map(str,tdata[5]))+''']
+                },
+                {
+                label: 'Outflow',
+                fill: false,
+                pointRadius: 0,
+                borderColor: 'orange',
+                borderWidth: 1,
+                data: ['''+', '.join(map(str,tdata[6]))+''']
+                }
+            ]
+        },
+        options: {
+            responsive: false,
+            maintainAspectRatio: false,
+            title: {
+					display: true,
+					text: 'FM Flows'
+				},
+
+            tooltips: {
+                mode: 'index',
+                intersect: false,
+                titleFontSize: 10,
+                bodyFontSize: 10,
+                displayColors: false
+            },
+            layout: {
+                padding: {
+                    left: 0,
+                    right: 0,
+                    top: 0,
+                    bottom: 0
+                }
+            },
+
+            legend: {
+                display: true,
+                position: 'bottom',
+                labels: {
+                    fontSize: 10,
+                    fontColor: 'black',
+                    padding: 4
+                }
+            },
+            scales: {
+					xAxes: [{
+						display: true,
+                        maxRotation: 0,
+                        ticks: {
+                            maxRotation: 0,
+                            minRotation: 0,
+                            fontSize: 10,
+                            fontColor: 'black',
+                        },
+                        gridLines: {
+                            drawTicks: false
+                        },
+						scaleLabel: {
+							display: true,
+							labelString: 'Time',
+                            fontSize: 10,
+                            fontColor: 'black',
+						}
+					}],
+					yAxes: [{
+						display: true,
+                        ticks: {
+                            maxRotation: 0,
+                            minRotation: 0,
+                            fontSize: 10,
+                            fontColor: 'black',
+                        },
+                        gridLines: {
+                            drawTicks: false
+                        },
+						scaleLabel: {
+							display: true,
+							labelString: 'Flow (m3/s)',
+                            fontSize: 10,
+                            fontColor: 'black',
+						}
+					}]
+				}
+        }
+});
+'''
+        script = script +'''var FMItsChart'''+str(item[0])+''' = new Chart(document.getElementById('FMItsChart'''+str(item[0])+''''), {
+        type: 'line',
+        data: {
+            labels: ['''+', '.join(map(str,tdata[0]))+'''],
+            datasets: [
+                {
+                label: 'Max Iterations',
+                fill: false,
+                pointRadius: 0,
+                borderColor: 'black',
+                borderDash: [5,5],
+                borderWidth: 1,
+                data: ['''+', '.join(map(str,tdata[7]))+''']
+                },
+                {
+                label: 'Min Iterations',
+                fill: false,
+                pointRadius: 0,
+                borderColor: 'black',
+                borderDash: [5,5],
+                borderWidth: 1,
+
+                data: ['''+', '.join(map(str,tdata[8]))+''']
+                },
+                {
+                label: 'Iterations',
+                fill: false,
+                pointRadius: 0,
+                borderColor: 'brown',
+                borderWidth: 1,
+
+                data: ['''+', '.join(map(str,tdata[9]))+''']
+                }
+            ]
+        },
+        options: {
+            responsive: false,
+            maintainAspectRatio: false,
+            title: {
+					display: true,
+					text: 'FM Iterations'
+				},
+
+            tooltips: {
+                mode: 'index',
+                intersect: false,
+                titleFontSize: 10,
+                bodyFontSize: 10,
+                displayColors: false
+            },
+            layout: {
+                padding: {
+                    left: 0,
+                    right: 0,
+                    top: 0,
+                    bottom: 0
+                }
+            },
+
+            legend: {
+                display: true,
+                position: 'bottom',
+                labels: {
+                    fontSize: 10,
+                    fontColor: 'black',
+                    padding: 4
+                }
+            },
+            scales: {
+					xAxes: [{
+						display: true,
+                        maxRotation: 0,
+                        ticks: {
+                            maxRotation: 0,
+                            minRotation: 0,
+                            fontSize: 10,
+                            fontColor: 'black',
+                        },
+                        gridLines: {
+                            drawTicks: false
+                        },
+						scaleLabel: {
+							display: true,
+							labelString: 'Time',
+                            fontSize: 10,
+                            fontColor: 'black',
+						}
+					}],
+					yAxes: [{
+						display: true,
+                        ticks: {
+                            maxRotation: 0,
+                            minRotation: 0,
+                            fontSize: 10,
+                            fontColor: 'black',
+                        },
+                        gridLines: {
+                            drawTicks: false
+                        },
+						scaleLabel: {
+							display: true,
+							labelString: 'Iterations',
+                            fontSize: 10,
+                            fontColor: 'black',
+						}
+					}]
+				}
+        }
+});
+'''
+        script = script +'''var FMMBChart'''+str(item[0])+''' = new Chart(document.getElementById('FMMBChart'''+str(item[0])+''''), {
+        type: 'line',
+        data: {
+            labels: ['''+', '.join(map(str,tdata[0]))+'''],
+            datasets: [
+                {
+                label: '1D Mass Error',
+                fill: false,
+                pointRadius: 0,
+                borderColor: 'hotpink',
+                borderWidth: 1,
+
+                data: ['''+', '.join(map(str,tdata[10]))+''']
+                }
+            ]
+        },
+        options: {
+            responsive: false,
+            maintainAspectRatio: false,
+            title: {
+					display: true,
+					text: 'FM Mass Balance'
+				},
+
+            tooltips: {
+                mode: 'index',
+                intersect: false,
+                titleFontSize: 10,
+                bodyFontSize: 10,
+                displayColors: false
+            },
+            layout: {
+                padding: {
+                    left: 0,
+                    right: 0,
+                    top: 0,
+                    bottom: 0
+                }
+            },
+
+            legend: {
+                display: true,
+                position: 'bottom',
+                labels: {
+                    fontSize: 10,
+                    fontColor: 'black',
+                    padding: 4
+                }
+            },
+            scales: {
+					xAxes: [{
+						display: true,
+                        maxRotation: 0,
+                        ticks: {
+                            maxRotation: 0,
+                            minRotation: 0,
+                            fontSize: 10,
+                            fontColor: 'black',
+                        },
+	                        gridLines: {
+                                drawTicks: false
+                            },
+					scaleLabel: {
+							display: true,
+							labelString: 'Time',
+                            fontSize: 10,
+                            fontColor: 'black',
+						}
+					}],
+					yAxes: [{
+						display: true,
+                        ticks: {
+                            maxRotation: 0,
+                            minRotation: 0,
+                            fontSize: 10,
+                            fontColor: 'black',
+                        },
+                        gridLines: {
+                            drawTicks: false
+                        },
+						scaleLabel: {
+							display: true,
+							labelString: '%',
+                            fontSize: 10,
+                            fontColor: 'black',
+						}
+					}]
+				}
+        }
+});
+'''
 
     script=script+'''</script>'''
 
@@ -445,7 +951,11 @@ def generate_fm(cursor, sId):
             					</table></div>
             				</div>
             				<div class="chartDiv-TUFmb" ><canvas id="FMConChart'''+str(sId)+'''"style="width:100%;height:100%;"></canvas></div>
-            			</div>
+            				<div class="chartDiv-TUFmb" ><canvas id="FMIOChart'''+str(sId)+'''"style="width:100%;height:100%;"></canvas></div>
+            				<div class="chartDiv-TUFmb" ><canvas id="FMItsChart'''+str(sId)+'''"style="width:100%;height:100%;"></canvas></div>
+            				<div class="chartDiv-TUFmb" ><canvas id="FMMBChart'''+str(sId)+'''"style="width:100%;height:100%;"></canvas></div>
+
+                        </div>
             		</div>
             '''
     return html
@@ -473,7 +983,10 @@ def generate_tuf(cursor, sId):
             						'''+tufDetTable+'''
             					</table></div>
             				</div>
-            				<div class="chartDiv-TUFmb" ><canvas id="TUFChart'''+str(sId)+'''"style="width:100%;height:100%;"></canvas></div>
+                            <div class="grid-container-tufPlots">
+                                <div class="chartDiv-TUFmb" ><canvas id="TUFVolChart'''+str(sId)+'''"style="width:100%;height:100%;"></canvas></div>
+            				    <div class="chartDiv-TUFmb" ><canvas id="TUFChart'''+str(sId)+'''"style="width:100%;height:100%;"></canvas></div>
+                            </div>
             			</div>
             		</div>
             '''
@@ -513,7 +1026,7 @@ def generate_files(cursor, sId):
     return html
 
 def generate_log():
-    modelName = 'reptonStreet'
+    modelName = 'riverTrent'
     dbLoc = r'C:\DevArea\TestDB'
 
     sId = 5
