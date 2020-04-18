@@ -38,7 +38,7 @@ def lf1Logger(lf1File):
 
             elif data[0] == '!!PlotC1':
                 flowCon = data[2]
-                levelCon = data[3]
+                levelCon = data[3]*htol/qtol # Corrector applied
 
             elif data[0] == '!!PlotF1':
                 time = data[1]
