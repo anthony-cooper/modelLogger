@@ -69,7 +69,12 @@ def generate_header():
                   text-align: center;
                   font-weight: bold;
                 }
-
+				.chartDiv-TUFmb {
+                    border: 1px solid #ddd;
+                    backgroundColor: 'white';
+					max-width: 600px;
+					max-height: 300px;
+				}
 
                 table {
                   border-collapse: collapse;
@@ -117,13 +122,14 @@ def generate_content(cursor, mId):
 
     cursor.execute(sqlCommand,[mId])
     data=cursor.fetchall()
+    data = data[0:1]
 
 
     simulations=''
     content=''
     script='''
-    <script>
-                '''
+    <script>'''
+
     for item in data:
         if item[1].count('_[') == 2:
             simulations = simulations + '''<tr id="row'''+str(item[0])+'''" onclick="show'''+str(item[0])+'''()"><td nowrap>'''+item[1].split('_[')[1][:-1]+'''</td><td>'''+item[1].split('_[')[2][:-1]+'''</td nowrap></tr>'''
@@ -165,20 +171,16 @@ def generate_content(cursor, mId):
 
 
     script = script+'''
-                </script>
+        </script>'''
 
-'''
-    script=script + '''<script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
-<script type="text/javascript">
 
-window.onload = function show() {
-'''
-    for item in data:
-        script=script+genTUFmbPlot(cursor, item[0])
-
+    script=script + '''
+        <script>
+            window.onload = function show() {
+                '''
     script=script+'''show'''+str(data[0][0])+'''()
-}
-</script>
+            }
+        </script>
 
 </head>'''
 
@@ -195,8 +197,191 @@ window.onload = function show() {
 
     '''+html+content
     html=html+'''</div>
-</html>'''
 
+
+'''
+
+
+    script='''<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"></script>
+    <script>'''
+
+
+    for item in data:
+        sqlCommand = '''SELECT TUFmb.time, TUFmb.CumQME
+                        FROM TUFmb
+                        WHERE TUFmb.simulationId = ?
+                        ORDER BY TUFmb.time'''
+        cursor.execute(sqlCommand,[item[0]])
+        data=cursor.fetchall()
+        tdata = list(zip(*data))
+        if not tdata:
+            tdata = [[0],[0]]
+
+        #print(', '.join(map(str,tdata[1])))
+
+        script = script +'''var TUFChart'''+str(item[0])+''' = new Chart(document.getElementById('TUFChart'''+str(item[0])+''''), {
+        type: 'line',
+        data: {
+            labels: ['''+', '.join(map(str,tdata[0]))+'''],
+            datasets: [
+                {
+                label: 'Cum. Q ME',
+                fill: false,
+                pointRadius: 0,
+                borderColor: 'orange',
+                data: ['''+', '.join(map(str,tdata[1]))+''']
+                }
+            ]
+        },
+        options: {
+            responsive: false,
+            maintainAspectRatio: false,
+            legend: {
+                display: true,
+                position: 'right',
+            },
+            scales: {
+					xAxes: [{
+						display: true,
+						scaleLabel: {
+							display: true,
+							labelString: 'Time'
+						}
+					}],
+					yAxes: [{
+						display: true,
+						scaleLabel: {
+							display: true,
+							labelString: '%'
+						}
+					}]
+				}
+        }
+});
+'''
+
+        sqlCommand = '''SELECT FMlf.time, FMlf.flowCon, FMlf.qtol, FMlf.levelCon, FMlf.htol, FMlf.maxitr, FMlf.minitr, FMlf.iterations, FMlf.massError
+                        FROM FMlf
+                        WHERE FMlf.simulationId = ?
+                        ORDER BY FMlf.time'''
+        cursor.execute(sqlCommand,[item[0]])
+        data=cursor.fetchall()
+        tdata = list(zip(*data))
+        if not tdata:
+            tdata = [[0],[0],[0],[0],[0],[0],[0],[0],[0]]
+
+        #print(', '.join(map(str,tdata[1])))
+
+        script = script +'''var FMConChart'''+str(item[0])+''' = new Chart(document.getElementById('FMConChart'''+str(item[0])+''''), {
+        type: 'line',
+        data: {
+            labels: ['''+', '.join(map(str,tdata[0]))+'''],
+            datasets: [
+                {
+                label: 'Flow Convergence',
+                fill: false,
+                pointRadius: 0,
+                borderColor: 'red',
+                data: ['''+', '.join(map(str,tdata[1]))+''']
+                },
+                {
+                label: 'Flow Tolerance',
+                fill: false,
+                pointRadius: 0,
+                borderColor: 'red',
+                borderDash: [5,5],
+                borderDashOffset: 0,
+
+
+                data: ['''+', '.join(map(str,tdata[2]))+''']
+                },
+                {
+                label: 'Level Convergence',
+                fill: false,
+                pointRadius: 0,
+                borderColor: 'blue',
+
+                data: ['''+', '.join(map(str,tdata[3]))+''']
+                },
+                {
+                label: 'Level Tolerance',
+                fill: false,
+                pointRadius: 0,
+                borderColor: 'blue',
+                borderDash: [5,5],
+                borderDashOffset: 5,
+
+                data: ['''+', '.join(map(str,tdata[4]))+''']
+                }
+
+            ]
+        },
+        options: {
+            responsive: false,
+            maintainAspectRatio: false,
+            tooltips: {
+                mode: 'index'
+            },
+            layout: {
+                padding: {
+                    left: 0,
+                    right: 0,
+                    top: 0,
+                    bottom: 0
+                }
+            },
+
+            legend: {
+                display: true,
+                position: 'bottom',
+                labels: {
+                    fontSize: 10,
+                    fontColor: 'black',
+                    padding: 4
+                }
+            },
+            scales: {
+					xAxes: [{
+						display: true,
+                        maxRotation: 0,
+                        ticks: {
+                            maxRotation: 0,
+                            minRotation: 0,
+                            fontSize: 10,
+                            fontColor: 'black',
+                            padding: 2
+                        },
+						scaleLabel: {
+							display: true,
+							labelString: 'Time',
+                            fontSize: 10,
+                            fontColor: 'black',
+                            padding: 2
+						}
+					}],
+					yAxes: [{
+						display: true,
+                        ticks: {
+                            maxRotation: 0,
+                            minRotation: 0,
+                            fontSize: 10,
+                            fontColor: 'black',
+                            padding: 2
+                        },
+
+						scaleLabel: {
+							display: false,
+						}
+					}]
+				}
+        }
+});
+'''
+
+
+    script=script+'''</script>'''
+
+    html=html+script+'''</html>'''
     return html
 
 def generate_base(cursor, sId):
@@ -259,7 +444,7 @@ def generate_fm(cursor, sId):
             						'''+fmModTable+'''
             					</table></div>
             				</div>
-            				<div class="grid-item">Reserve for FM Plot</div>
+            				<div class="chartDiv-TUFmb" ><canvas id="FMConChart'''+str(sId)+'''"style="width:100%;height:100%;"></canvas></div>
             			</div>
             		</div>
             '''
@@ -288,61 +473,11 @@ def generate_tuf(cursor, sId):
             						'''+tufDetTable+'''
             					</table></div>
             				</div>
-            				<div><div id="chart'''+str(sId)+'''" style="height: 100%; width: 100%;"></div></div>
+            				<div class="chartDiv-TUFmb" ><canvas id="TUFChart'''+str(sId)+'''"style="width:100%;height:100%;"></canvas></div>
             			</div>
             		</div>
             '''
     return html
-
-def genTUFmbPlot(cursor, sId):
-    script = '''	var chart'''+str(sId)+''' = new CanvasJS.Chart("chart'''+str(sId)+'''", {
-		title:{
-			text: "TUFLOW Plot"
-		},
-		axisX:{
-		title: "Time (hrs)",
-		crosshair: {
-			enabled: true,
-			snapToDataPoint: true
-		}
-		},
-		axisY: {
-		title: "%",
-		crosshair: {
-			enabled: true,
-			snapToDataPoint: true,
-		}
-		},
-		data: [
-        		{
-			type: "line",
-			dataPoints: ['''
-
-
-
-    sqlCommand = '''SELECT TUFmb.time, TUFmb.CumQME
-                    FROM TUFmb
-                    WHERE TUFmb.simulationId = ?
-                    ORDER BY TUFmb.time'''
-    cursor.execute(sqlCommand,[sId])
-    data=cursor.fetchall()
-    #print(script)
-    #print(data)
-    if data:
-        for item in data:
-            script = script + '''{ x: '''+str(item[0])+''', y: '''+str(item[1])+''' },
-                            '''
-        script = script + ''']
-		}
-		]
-	});
-	chart'''+str(sId)+'''.render();
-'''
-        #print(script)
-        return script
-    else:
-        return ''
-
 
 def generate_files(cursor, sId):
     sqlCommand = '''SELECT files.fileName, files.fileExt, files.type, files.path, files.readInSettings, files.notes
@@ -378,7 +513,7 @@ def generate_files(cursor, sId):
     return html
 
 def generate_log():
-    modelName = 'floodModel'
+    modelName = 'reptonStreet'
     dbLoc = r'C:\DevArea\TestDB'
 
     sId = 5
