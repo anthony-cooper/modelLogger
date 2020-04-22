@@ -1252,7 +1252,7 @@ def FMConChart():
             ]
         },
         options: {
-            responsive: false,
+            responsive: true,
             maintainAspectRatio: false,
             title: {
                     display: true,
@@ -1354,7 +1354,7 @@ def FMIOChart():
             ]
         },
         options: {
-            responsive: false,
+            responsive: true,
             maintainAspectRatio: false,
             title: {
                     display: true,
@@ -1468,7 +1468,7 @@ var FMItsChart = new Chart(document.getElementById('FMItsChart'), {
         ]
     },
     options: {
-        responsive: false,
+        responsive: true,
         maintainAspectRatio: false,
         title: {
                 display: true,
@@ -1523,6 +1523,7 @@ var FMItsChart = new Chart(document.getElementById('FMItsChart'), {
                 yAxes: [{
                     display: true,
                     ticks: {
+                        beginAtZero: true,
                         maxRotation: 0,
                         minRotation: 0,
                         fontSize: 10,
@@ -1563,7 +1564,7 @@ def FMMBChart():
             ]
         },
         options: {
-            responsive: false,
+            responsive: true,
             maintainAspectRatio: false,
             title: {
 					display: true,
@@ -1688,7 +1689,7 @@ def TUFVolChart():
             ]
         },
         options: {
-            responsive: false,
+            responsive: true,
             maintainAspectRatio: false,
             title: {
                     display: true,
@@ -1782,7 +1783,7 @@ def TUFMBChart():
             ]
         },
         options: {
-            responsive: false,
+            responsive: true,
             maintainAspectRatio: false,
             title: {
                     display: true,
@@ -2097,7 +2098,7 @@ def gen(cursor, mId):
 
 def generate_log():
     modelName = 'riverTrent'
-    dbLoc = r'C:\DevArea\TestDB'
+    dbLoc = r'C:\Users\anthony.cooper\OneDrive - Arup\dev'
 
     sId = 5
     mId = 1
