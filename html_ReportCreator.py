@@ -2079,12 +2079,14 @@ def gen(cursor, mId):
 
         script = script + updateScript(cursor, item[0],data)
 
+        print('generated for: '+ item[1])
+
     script = script + '''
 </script>
 '''
-
+    print('************')
     html = CSS() + layout(simulations) + script + loadScript()
-
+    print('full html generated')
     return html
 
 
@@ -2097,7 +2099,7 @@ def gen(cursor, mId):
 
 
 def generate_log():
-    modelName = 'riverTrent'
+    modelName = 'severnTidal'
     dbLoc = r'C:\Users\anthony.cooper\OneDrive - Arup\dev'
 
     sId = 5
