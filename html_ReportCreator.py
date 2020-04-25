@@ -955,7 +955,7 @@ def TUFMBChart():
 
 
 
-def layout(simulations):
+def layout(simulations, modelType):
     layout='''
 <div class="grid-container-base">
 
@@ -972,8 +972,10 @@ def layout(simulations):
 
     <div class="grid-container-types">
 '''
-    layout=layout+FMhtml()
-    layout=layout+TUFhtml()
+    if modelType == 0 or modelType == 2:
+        layout=layout+FMhtml()
+    if modelType == 1 or modelType == 2:
+        layout=layout+TUFhtml()
     layout=layout+FILhtml()
     layout=layout+'''
     </div>
@@ -982,7 +984,7 @@ def layout(simulations):
 
     return layout
 
-def loadScript():
+def loadScript(modelType):
     script = '''
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"></script>
 <script>
@@ -992,55 +994,60 @@ def loadScript():
 </script>
 
 <script>'''
-
-    script = script + FMConChart()
-    script = script + FMIOChart()
-    script = script + FMItsChart()
-    script = script + FMMBChart()
-    script = script + TUFVolChart()
-    script = script + TUFdVolChart()
-    script = script + TUFMBChart()
+    if modelType == 0 or modelType == 2:
+        script = script + FMConChart()
+        script = script + FMIOChart()
+        script = script + FMItsChart()
+        script = script + FMMBChart()
+    if modelType == 1 or modelType == 2:
+        script = script + TUFVolChart()
+        script = script + TUFdVolChart()
+        script = script + TUFMBChart()
 
     script = script + '''
 </script>'''
 
     return script
 
-def updateScript(cursor, sId,sims):
+def updateScript(cursor, sId,sims, modelType):
     FMDetTable = ''
     FMModTable = ''
     TUFDetTable = ''
     filesTable = ''
 
-    sqlCommand = '''SELECT simulationExtras.parameter, simulationExtras.value
-                    FROM simulationExtras, simulations
-                    WHERE simulations.sId = ? and simulationExtras.simulationId = simulations.sId and simulationExtras.software = 0'''
-    cursor.execute(sqlCommand,[sId])
-    data=cursor.fetchall()
-    FMDetTable='''"<tr><th>Parameter</th><th>Value</th></tr>'''
-    for item in data:
-        FMDetTable = FMDetTable + '''<tr><td>'''+item[0]+'''</td><td>'''+item[1]+'''</td></tr>'''
-    FMDetTable = FMDetTable+'''";'''
+    if modelType == 0 or modelType == 2:
 
-    sqlCommand = '''SELECT nsParas.parameter
-                    FROM nsParas, simulation_nsParas, simulations
-                    WHERE simulations.sId = ? and simulation_nsParas.simulationID = simulations.sId and simulation_nsParas.nsParasID = nsParas.nsParasId  and nsParas.software = 0'''
-    cursor.execute(sqlCommand,[sId])
-    data=cursor.fetchall()
-    FMModTable='''"<tr><th>Change made</th></tr>'''
-    for item in data:
-        FMModTable = FMModTable + '''<tr><td>'''+item[0]+'''</td></tr>'''
-    FMModTable = FMModTable+'''";'''
+        sqlCommand = '''SELECT simulationExtras.parameter, simulationExtras.value
+                        FROM simulationExtras, simulations
+                        WHERE simulations.sId = ? and simulationExtras.simulationId = simulations.sId and simulationExtras.software = 0'''
+        cursor.execute(sqlCommand,[sId])
+        data=cursor.fetchall()
+        FMDetTable='''"<tr><th>Parameter</th><th>Value</th></tr>'''
+        for item in data:
+            FMDetTable = FMDetTable + '''<tr><td>'''+item[0]+'''</td><td>'''+item[1]+'''</td></tr>'''
+        FMDetTable = FMDetTable+'''";'''
 
-    sqlCommand = '''SELECT simulationExtras.parameter, simulationExtras.value
-                    FROM simulationExtras, simulations
-                    WHERE simulations.sId = ? and simulationExtras.simulationId = simulations.sId and simulationExtras.software = 1'''
-    cursor.execute(sqlCommand,[sId])
-    data=cursor.fetchall()
-    TUFDetTable='''"<tr><th>Parameter</th><th>Value</th></tr>'''
-    for item in data:
-        TUFDetTable = TUFDetTable + '''<tr><td>'''+item[0]+'''</td><td>'''+item[1]+'''</td></tr>'''
-    TUFDetTable = TUFDetTable+'''";'''
+        sqlCommand = '''SELECT nsParas.parameter
+                        FROM nsParas, simulation_nsParas, simulations
+                        WHERE simulations.sId = ? and simulation_nsParas.simulationID = simulations.sId and simulation_nsParas.nsParasID = nsParas.nsParasId  and nsParas.software = 0'''
+        cursor.execute(sqlCommand,[sId])
+        data=cursor.fetchall()
+        FMModTable='''"<tr><th>Change made</th></tr>'''
+        for item in data:
+            FMModTable = FMModTable + '''<tr><td>'''+item[0]+'''</td></tr>'''
+        FMModTable = FMModTable+'''";'''
+
+    if modelType == 1 or modelType == 2:
+
+        sqlCommand = '''SELECT simulationExtras.parameter, simulationExtras.value
+                        FROM simulationExtras, simulations
+                        WHERE simulations.sId = ? and simulationExtras.simulationId = simulations.sId and simulationExtras.software = 1'''
+        cursor.execute(sqlCommand,[sId])
+        data=cursor.fetchall()
+        TUFDetTable='''"<tr><th>Parameter</th><th>Value</th></tr>'''
+        for item in data:
+            TUFDetTable = TUFDetTable + '''<tr><td>'''+item[0]+'''</td><td>'''+item[1]+'''</td></tr>'''
+        TUFDetTable = TUFDetTable+'''";'''
 
     sqlCommand = '''SELECT files.fileName, files.fileExt, files.type, files.path, files.readInSettings, files.notes
                     FROM simulation_file, simulations, files
@@ -1065,25 +1072,29 @@ def updateScript(cursor, sId,sims):
     cursor.execute(sqlCommand,[sId])
     simName=cursor.fetchone()[0]
 
-    sqlCommand = '''SELECT FMlf.time, FMlf.flowCon, FMlf.qtol, FMlf.levelCon, FMlf.htol, FMlf.inflow, FMlf.outflow, FMlf.maxitr, FMlf.minitr, FMlf.iterations, FMlf.massError
-                    FROM FMlf
-                    WHERE FMlf.simulationId = ?
-                    ORDER BY FMlf.time'''
-    cursor.execute(sqlCommand,[sId])
-    data=cursor.fetchall()
-    fmtdata = list(zip(*data))
-    if not fmtdata:
-        fmtdata = [[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0]]
+    if modelType == 0 or modelType == 2:
 
-    sqlCommand = '''SELECT TUFmb.time, TUFmb.CumQME, TUFmb.HVolIn, TUFmb.HVolOut, TUFmb.QVolIn, TUFmb.QVolOut, TUFmb.TotVolIn, TUFmb.TotVolOut, TUFmb.TotVol, TUFmb.dVol, TUFmb.VolImO
-                    FROM TUFmb
-                    WHERE TUFmb.simulationId = ?
-                    ORDER BY TUFmb.time'''
-    cursor.execute(sqlCommand,[sId])
-    data=cursor.fetchall()
-    tuftdata = list(zip(*data))
-    if not tuftdata:
-        tuftdata = [[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0]]
+        sqlCommand = '''SELECT FMlf.time, FMlf.flowCon, FMlf.qtol, FMlf.levelCon, FMlf.htol, FMlf.inflow, FMlf.outflow, FMlf.maxitr, FMlf.minitr, FMlf.iterations, FMlf.massError
+                        FROM FMlf
+                        WHERE FMlf.simulationId = ?
+                        ORDER BY FMlf.time'''
+        cursor.execute(sqlCommand,[sId])
+        data=cursor.fetchall()
+        fmtdata = list(zip(*data))
+        if not fmtdata:
+            fmtdata = [[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0]]
+
+    if modelType == 1 or modelType == 2:
+
+        sqlCommand = '''SELECT TUFmb.time, TUFmb.CumQME, TUFmb.HVolIn, TUFmb.HVolOut, TUFmb.QVolIn, TUFmb.QVolOut, TUFmb.TotVolIn, TUFmb.TotVolOut, TUFmb.TotVol, TUFmb.dVol, TUFmb.VolImO
+                        FROM TUFmb
+                        WHERE TUFmb.simulationId = ?
+                        ORDER BY TUFmb.time'''
+        cursor.execute(sqlCommand,[sId])
+        data=cursor.fetchall()
+        tuftdata = list(zip(*data))
+        if not tuftdata:
+            tuftdata = [[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0]]
 
     cols=''
     for itemX in sims:
@@ -1105,12 +1116,20 @@ def updateScript(cursor, sId,sims):
 
     script = '''
     function show'''+str(sId)+'''() {
-        '''+cols+'''
+        '''+cols
+    if modelType == 0 or modelType == 2:
+        script = script+'''
         document.getElementById("FMDetTable").innerHTML = '''+FMDetTable+''';
-		document.getElementById("FMModTable").innerHTML = '''+FMModTable+''';
-		document.getElementById("TUFDetTable").innerHTML = '''+TUFDetTable+''';
+		document.getElementById("FMModTable").innerHTML = '''+FMModTable+''';'''
+
+    if modelType == 1 or modelType == 2:
+        script = script+'''
+		document.getElementById("TUFDetTable").innerHTML = '''+TUFDetTable+''';'''
+    script = script+'''
 		document.getElementById("filesTable").innerHTML = '''+filesTable+''';
-		document.getElementById("simTitle").innerHTML =  "Model Log: '''+simName+'''";
+		document.getElementById("simTitle").innerHTML =  "Model Log: '''+simName+'''";'''
+    if modelType == 0 or modelType == 2:
+        script = script+'''
         FMConChart.data.datasets[0].data = ['''+', '.join(map(str,fmtdata[1]))+'''];
         FMConChart.data.datasets[1].data = ['''+', '.join(map(str,fmtdata[2]))+'''];
         FMConChart.data.datasets[2].data = ['''+', '.join(map(str,fmtdata[3]))+'''];
@@ -1128,7 +1147,9 @@ def updateScript(cursor, sId,sims):
         FMItsChart.update()
         FMMBChart.data.datasets[0].data = ['''+', '.join(map(str,fmtdata[10]))+'''];
         FMMBChart.data.labels = ['''+', '.join(map(str,fmtdata[0]))+''']
-        FMMBChart.update()
+        FMMBChart.update()'''
+    if modelType == 1 or modelType == 2:
+        script = script+'''
         TUFVolChart.data.datasets[0].data = ['''+', '.join(map(str,tuftdata[2]))+'''];
         TUFVolChart.data.datasets[1].data = ['''+', '.join(map(str,tuftdata[3]))+'''];
         TUFVolChart.data.datasets[2].data = ['''+', '.join(map(str,tuftdata[4]))+'''];
@@ -1144,7 +1165,8 @@ def updateScript(cursor, sId,sims):
         TUFdVolChart.update()
         TUFMBChart.data.datasets[0].data = ['''+', '.join(map(str,tuftdata[1]))+'''];
         TUFMBChart.data.labels = ['''+', '.join(map(str,tuftdata[0]))+''']
-        TUFMBChart.update()
+        TUFMBChart.update()'''
+    script = script+'''
     }
 '''
 
@@ -1152,7 +1174,7 @@ def updateScript(cursor, sId,sims):
 
 
 
-def gen(cursor, mId):
+def gen(cursor, mId, modelType):
 
     sqlCommand = '''SELECT simulations.sId, simulations.simName
                     FROM simulations, models, model_simulation
@@ -1177,7 +1199,7 @@ def gen(cursor, mId):
         else:
             simulations = simulations + '''<tr id="row'''+str(item[0])+'''" onclick="show'''+str(item[0])+'''()"><td nowrap>'''+item[1]+'''</td></tr>'''
 
-        script = script + updateScript(cursor, item[0],data)
+        script = script + updateScript(cursor, item[0], data, modelType)
 
         print('generated for: '+ item[1])
 
@@ -1185,7 +1207,7 @@ def gen(cursor, mId):
 </script>
 '''
     print('************')
-    html = CSS() + layout(simulations) + script + loadScript()
+    html = CSS() + layout(simulations, modelType) + script + loadScript(modelType)
     print('full html generated')
     return html
 
@@ -1195,13 +1217,14 @@ def generate_log():
 
     sId = 5
     mId = 1
+    modelType = 2 #0 FM, 1 TUF, 2 Linked
 
     #Open Database
     db = sqlite3.connect(os.path.join(dbLoc,modelName+'.sqlite3'))
     cursor = db.cursor()
 
     #html=generate_header()+generate_content(cursor, mId)
-    html = gen(cursor, mId)
+    html = gen(cursor, mId, modelType)
 
     f = open(os.path.join(dbLoc,modelName+'.html'), "w")
     f.write(html)
