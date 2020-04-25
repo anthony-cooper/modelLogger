@@ -1255,7 +1255,7 @@ def updateScript(cursor, sId,sims, modelType):
         FMMBChart.data.datasets[0].data = ['''+', '.join(map(str,fmtdata[10]))+'''];
         FMMBChart.data.labels = ['''+', '.join(map(str,fmtdata[0]))+''']
         FMMBChart.update()
-        nonConConfig.data.datasets.splice(0, 999)
+        nonConConfig.data.datasets.splice(0, 9999)
 		FMNonConChart.update()'''
         script = script + fmNonConUpdate(cursor,sId)
     if modelType == 1 or modelType == 2:
@@ -1302,13 +1302,45 @@ def fmNonConUpdate(cursor,sId):
                 if dataPoints:
                     update = update+'''
                     var newDatasetQRatio'''+hex_number[1:]+''' = {
-                        label: "'''+series+''' ('''+str(count)+''')",
+                        label: "Q: '''+series+''' ('''+str(count)+''')",
                         backgroundColor: "'''+hex_number+'''",
                         borderColor: "'''+hex_number+'''",
-                        borderWidth: 1,
+                        borderWidth: 0,
                         data: ['''+dataPoints+''']
                     }
                     nonConConfig.data.datasets.push(newDatasetQRatio'''+hex_number[1:]+''');
+                    '''
+                    print(series + dataPoints)
+                    dataPoints = ''
+                    count=0
+            dataPoints = dataPoints + '{x:' + str(point[0]) + ', y:' + str(point[1]) + '}, '
+            count = count + 1
+    sqlCommand = '''SELECT FMNonCons.time, FMNonCons.hRatio, FMNonCons.hRatioNode
+                    FROM FMNonCons
+                    WHERE FMNonCons.simulationId = ?
+                    ORDER BY FMNonCons.hRatioNode'''
+    cursor.execute(sqlCommand,[sId])
+    data=cursor.fetchall()
+    series =''
+    hex_number ='#000000'
+    dataPoints = ''
+    count = 0
+    if data:
+        for point in data:
+            if point[2] != series:
+                series = point[2]
+                hex_number ='#'+ str(hex(random.randint(0,16777215)))[2:]
+                if dataPoints:
+                    update = update+'''
+                    var newDatasetHRatio'''+hex_number[1:]+''' = {
+                        label: "H: '''+series+''' ('''+str(count)+''')",
+                        backgroundColor: "'''+hex_number+'''",
+                        borderColor: "'''+hex_number+'''",
+                        pointStyle: 'rect',
+                        borderWidth: 0,
+                        data: ['''+dataPoints+''']
+                    }
+                    nonConConfig.data.datasets.push(newDatasetHRatio'''+hex_number[1:]+''');
                     '''
                     print(series + dataPoints)
                     dataPoints = ''
