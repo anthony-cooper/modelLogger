@@ -76,6 +76,18 @@ def setup_Database(modelName, dbLoc):
     lfTableFields.append(('minitr','REAL'))
     lfTableFields.append(('FOREIGN KEY (simulationID)','REFERENCES simulations (sId)'))
 
+    fmNonConsTableFields = []
+    fmNonConsTableFields.append(('simulationId', 'INTEGER'))
+    fmNonConsTableFields.append(('time','REAL'))
+    fmNonConsTableFields.append(('qRatio','REAL'))
+    fmNonConsTableFields.append(('qRatioNode','VARCHAR(255)'))
+    fmNonConsTableFields.append(('hRatio','REAL'))
+    fmNonConsTableFields.append(('hRatioNode','VARCHAR(255)'))
+    fmNonConsTableFields.append(('maxdq','REAL'))
+    fmNonConsTableFields.append(('maxdqNode','VARCHAR(255)'))
+    fmNonConsTableFields.append(('maxdh','REAL'))
+    fmNonConsTableFields.append(('maxdhNode','VARCHAR(255)'))
+    fmNonConsTableFields.append(('FOREIGN KEY (simulationID)','REFERENCES simulations (sId)'))
 
 
 
@@ -173,7 +185,7 @@ def setup_Database(modelName, dbLoc):
     databaseTables.append(('simulation_file',simulation_file_LinksFields))
     databaseTables.append(('TUFmb',mbTableFields))
     databaseTables.append(('FMlf',lfTableFields))
-
+    databaseTables.append(('FMNonCons',fmNonConsTableFields))
     # databaseTables.append(('file_file',file_file_LinksFields))
     # databaseTables.append(('comments_ALL',comment_ALL_LinksFields))
     databaseTables.append(('es',esTableFields))
@@ -235,6 +247,15 @@ def log_simX(db,sId,parameter,value,software):
     cursor.execute(sqlCommand, [sId,parameter,value,software])
     db.commit()
     return cursor.lastrowid
+
+def log_FMnonCon(db,sId,time,qRatio,qRatioNode,hRatio,hRatioNode,maxdq,maxdqNode,maxdh,maxdhNode):
+    cursor = db.cursor()
+    sqlCommand = 'INSERT INTO FMNonCons(simulationId,time,qRatio,qRatioNode,hRatio,hRatioNode,maxdq,maxdqNode,maxdh,maxdhNode) VALUES (?,?,?,?,?,?,?,?,?,?)'
+    cursor.execute(sqlCommand, [sId,time,qRatio,qRatioNode,hRatio,hRatioNode,maxdq,maxdqNode,maxdh,maxdhNode])
+    db.commit()
+    return cursor.lastrowid
+
+
 
 def log_file(db, file):
     cursor = db.cursor()
@@ -365,14 +386,16 @@ def logSimulation_2_items(db,sId, inputFiles, events, scenarios, homePath):
 
     if zzdPath:
         try: #ZZD Exists
+            print(zzdPath)
             zzdItems = zzdLogger(zzdPath)
-            for zzdItem in zzdItems:
+            for zzdItem in zzdItems[0]:
                 if zzdItem[0] in ['Flood Modeller Modified Parameter']:
                     nsParasId = log_nsParas(db, zzdItem[1],False)
                     link_sim_nsParas(db,sId,nsParasId)
                 else:
                     log_simX(db,sId,zzdItem[0],zzdItem[1],False)
-
+            for nonCon in zzdItems[1]:
+                log_FMnonCon(db, sId, nonCon[0], nonCon[1], nonCon[2], nonCon[3], nonCon[4], nonCon[5], nonCon[6], nonCon[7], nonCon[8])
             print('zzd logged')
         except:
             print('zzd log failed, probably doesn\'t exist')
@@ -443,7 +466,7 @@ def logTUFmb(db, sId, outputFolder, tuflowSimulationName, homePath):
 modelName = 'floodModel'
 dbLoc = r'C:\DevArea\TestDB'
 
-iefPath = r'C:\Users\antho\Downloads\Model\Model\FloodModeller\IEF'
+iefPath = r'C:\DevArea\TestModel\FM\IEF'
 
 versionName = 'TEST'
 versionNotes = ''
