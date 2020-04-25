@@ -6,12 +6,16 @@ import re #Regular expressions, used for wildcard matching
 
 def zzdLogger(zzdFile):
     loggedItems = []
-    loggedItems.extend(zzdFileAssessment(zzdFile))
+    nonCons =[]
+    ass = zzdFileAssessment(zzdFile)
+    loggedItems.extend(ass[0])
+    nonCons.extend(ass[1])
 
-    return loggedItems
+    return loggedItems, nonCons
 
 def zzdFileAssessment(textFile):
     loggedItems =[]
+    nonCons = []
     #Read in file
     file = open(textFile,"r")
     #Split lines into lists using ' ' and tab as delimters
@@ -24,12 +28,15 @@ def zzdFileAssessment(textFile):
 
     workingFolder=path.dirname(textFile)
 
-    loggedItems.extend(zzdTextAssessment(fileLines))
+    ass = zzdTextAssessment(fileLines)
+    loggedItems.extend(ass[0])
+    nonCons.extend(ass[1])
 
-    return loggedItems
+    return loggedItems, nonCons
 
 def zzdTextAssessment(textBlock):
     loggedItems=[]
+    nonCons = []
     finish=''
     #4. Take list of lists (lines split into words) and handle
     text = iter(textBlock)
@@ -64,6 +71,27 @@ def zzdTextAssessment(textBlock):
                     ne = next(text)
                     loggedItems.append(('Flood Modeller Start Time', ne[5] + ' ' + ne[3]))
 
+            elif ''.join(textLine[:5]).casefold() == 'Poormodelconvergenceattime'.casefold():
+                time = textLine[5]
+                ne = next(text)
+                te = ''.join(ne)
+                qratio = float(te.split('=')[2].split('at')[0])
+                qratioN = te.split('=')[2].split('at')[1].split('HRATIO')[0]
+                hratio = float(te.split('=')[3].split('at')[0])
+                hratioN = te.split('=')[3].split('at')[1]
+                ne = next(text)
+                te = ''.join(ne)
+                maxDq = float(te.split('=')[1].split('at')[0])
+                maxDqN = te.split('=')[1].split('at')[1].split('MAX')[0]
+                maxDh = float(te.split('=')[2].split('at')[0])
+                maxDhN = te.split('=')[2].split('at')[1]
+                nonCons.append((time,qratio,qratioN,hratio,hratioN,maxDq,maxDqN,maxDh,maxDhN))
+
+
+
+
+
+
             elif ' '.join(textLine) == 'Flood Modeller 1D Solver run parameters modified as follows:':
                 while True:
                     try:
@@ -80,4 +108,6 @@ def zzdTextAssessment(textBlock):
             pass
     loggedItems.append(('Flood Modeller Final State', finish))
 
-    return loggedItems
+    return loggedItems, nonCons
+
+print(zzdLogger(r'C:\DevArea\TestModel\FM\Results\BROOKSTRAY_[02-00_EP2020-NC]_[TOPO-B-124-5_CHAN-B-1-5_002].zzd')[1])
