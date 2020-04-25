@@ -32,11 +32,30 @@ def tlfTextAssessment(textBlock):
     loggedItems=[]
     cputime=''
     clocktime=''
+    mxTime = ''
+    time=''
     #4. Take list of lists (lines split into words) and handle
     text = iter(textBlock)
     for textLine in text:
         try: #Catch errors from short lines, needs to check in order of number of words
-            if textLine[0].casefold()  == 'BUILD:'.casefold():
+            if 'Mx' in textLine:
+                mx = ''
+                ckMx = False
+                for item in textLine:
+                    if ckMx:
+                        if '.' in item:
+                            mx=mx+item.ljust(4,'0')
+                        else:
+                            mx=mx+item.ljust(2,'0')
+                    elif item == 'Mx':
+                        ckMx = True
+
+                time = float(textLine[1].split(':')[0])+float(float(textLine[1].split(':')[1])/60)+float(float(textLine[1].split(':')[2])/3600)
+                if float(mx[4:]) == 0:
+                    mxTime = time
+                mx=''
+                ckMx = False
+            elif textLine[0].casefold()  == 'BUILD:'.casefold():
                 loggedItems.append(('TUFLOW Build', textLine[1]))
             elif ''.join(textLine[:2]).casefold() == 'SimulationStarted:'.casefold():
                 loggedItems.append(('Simulation Start Time', textLine[2] + ' ' + textLine[3]))
@@ -88,4 +107,7 @@ def tlfTextAssessment(textBlock):
 
         except:
             pass
+
+    loggedItems.append(('Final 2D Simulated Time',time))
+    loggedItems.append(('Time of last TUFLOW maximum',mxTime))
     return loggedItems
