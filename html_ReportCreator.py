@@ -39,7 +39,7 @@ def CSS():
     .grid-container-tufPlots {
       display: grid;
       grid-template-columns: auto;
-      grid-template-rows: 50% 50%;
+      grid-template-rows: 33% 33% 34%;
     }
 
     .grid-container-fil {
@@ -75,7 +75,7 @@ def CSS():
         background-color: rgba(255, 255, 255, 0.6);
         min-width: 400px;
         width: 100%;
-        min-height: 400px;
+        min-height: 300px;
         height: 100%
     }
 
@@ -155,7 +155,8 @@ def TUFhtml():
     		</div>
             <div class="grid-container-tufPlots">
                 <div class="chartDiv-TUFmb" ><canvas id="TUFVolChart"style="width:100%;height:100%;"></canvas></div>
-    		    <div class="chartDiv-TUFmb" ><canvas id="TUFMBChart"style="width:100%;height:100%;"></canvas></div>
+                <div class="chartDiv-TUFmb" ><canvas id="TUFdVolChart"style="width:100%;height:100%;"></canvas></div>
+                <div class="chartDiv-TUFmb" ><canvas id="TUFMBChart"style="width:100%;height:100%;"></canvas></div>
             </div>
     	</div>
     </div>
@@ -616,7 +617,7 @@ def TUFVolChart():
                 label: 'Vol. In (Stage Bdys)',
                 fill: false,
                 pointRadius: 0,
-                borderColor: 'brown',
+                borderColor: '#ff00ff',
                 borderWidth: 1,
                 data: [1,2,3,4]
                 },
@@ -624,7 +625,7 @@ def TUFVolChart():
                 label: 'Vol. Out (Stage Bdys)',
                 fill: false,
                 pointRadius: 0,
-                borderColor: 'hotpink',
+                borderColor: '#660066',
                 borderWidth: 1,
                 data: [2,4,6,8]
                 },
@@ -632,7 +633,7 @@ def TUFVolChart():
                 label: 'Vol. In (Flow Bdys)',
                 fill: false,
                 pointRadius: 0,
-                borderColor: 'green',
+                borderColor: '#ffcc00',
                 borderWidth: 1,
                 data: [3,6,9,12]
                 },
@@ -640,7 +641,7 @@ def TUFVolChart():
                 label: 'Vol. Out (Flow Bdys)',
                 fill: false,
                 pointRadius: 0,
-                borderColor: 'orange',
+                borderColor: '#663300',
                 borderWidth: 1,
                 data: [12,9,6,3]
                 },
@@ -648,7 +649,7 @@ def TUFVolChart():
                 label: 'Vol. In (Total)',
                 fill: false,
                 pointRadius: 0,
-                borderColor: 'red',
+                borderColor: '#ff5050',
                 borderWidth: 2,
                 data: [8,6,4,2]
                 },
@@ -656,7 +657,15 @@ def TUFVolChart():
                 label: 'Vol. Out (Total)',
                 fill: false,
                 pointRadius: 0,
-                borderColor: 'blue',
+                borderColor: '#993333',
+                borderWidth: 2,
+                data: [4,3,2,1]
+                },
+                {
+                label: 'Mod. Vol.',
+                fill: false,
+                pointRadius: 0,
+                borderColor: '#00ffff',
                 borderWidth: 2,
                 data: [4,3,2,1]
                 },
@@ -714,7 +723,9 @@ def TUFVolChart():
                             fontColor: 'black',
                         }
                     }],
-                    yAxes: [{
+                    yAxes: [
+                    {
+                        position: 'left',
                         display: true,
                         ticks: {
                             maxRotation: 0,
@@ -732,12 +743,121 @@ def TUFVolChart():
                             fontColor: 'black',
 
                         }
+
+                    },
+
+                    ]
+                }
+        }
+    });
+    '''
+    return script
+
+def TUFdVolChart():
+    script = '''
+    var TUFdVolChart = new Chart(document.getElementById('TUFdVolChart'), {
+        type: 'line',
+        data: {
+            labels: [1,2,3,4],
+            datasets: [
+                {
+                label: 'Change in Mod. Vol. (dVol)',
+                fill: false,
+                pointRadius: 0,
+                borderColor: '#003366',
+                borderWidth: 2,
+                data: [4,3,2,1]
+                },
+                {
+                label: 'Vol. In - Out',
+                fill: false,
+                pointRadius: 0,
+                borderColor: '#00ff00',
+                borderWidth: 2,
+                data: [4,3,2,1]
+                },
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            title: {
+                    display: true,
+                    text: 'TUFLOW Change in Volumes'
+                },
+            tooltips: {
+                mode: 'index',
+                intersect: false,
+                titleFontSize: 10,
+                bodyFontSize: 10,
+                displayColors: false
+            },
+            layout: {
+                padding: {
+                    left: 0,
+                    right: 0,
+                    top: 0,
+                    bottom: 0
+                }
+            },
+
+            legend: {
+                display: true,
+                position: 'bottom',
+                labels: {
+                    fontSize: 10,
+                    fontColor: 'black',
+                    padding: 4
+                }
+            },
+            scales: {
+                    xAxes: [{
+                        display: true,
+                        maxRotation: 0,
+                        ticks: {
+                            maxRotation: 0,
+                            minRotation: 0,
+                            fontSize: 10,
+                            fontColor: 'black',
+                        },
+                        gridLines: {
+                            drawTicks: false
+                        },
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Time',
+                            fontSize: 10,
+                            fontColor: 'black',
+                        }
+                    }],
+                    yAxes: [
+                    {
+                        position: 'left',
+                        display: true,
+                        ticks: {
+                            maxRotation: 0,
+                            minRotation: 0,
+                            fontSize: 10,
+                            fontColor: 'black',
+                        },
+                        gridLines: {
+                            drawTicks: false
+                        },
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Change in Volume (m3)',
+                            fontSize: 10,
+                            fontColor: 'black',
+
+                        }
+
                     }]
                 }
         }
     });
     '''
     return script
+
 
 def TUFMBChart():
     script='''
@@ -878,6 +998,7 @@ def loadScript():
     script = script + FMItsChart()
     script = script + FMMBChart()
     script = script + TUFVolChart()
+    script = script + TUFdVolChart()
     script = script + TUFMBChart()
 
     script = script + '''
@@ -954,7 +1075,7 @@ def updateScript(cursor, sId,sims):
     if not fmtdata:
         fmtdata = [[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0]]
 
-    sqlCommand = '''SELECT TUFmb.time, TUFmb.CumQME, TUFmb.HVolIn, TUFmb.HVolOut, TUFmb.QVolIn, TUFmb.QVolOut, TUFmb.TotVolIn, TUFmb.TotVolOut
+    sqlCommand = '''SELECT TUFmb.time, TUFmb.CumQME, TUFmb.HVolIn, TUFmb.HVolOut, TUFmb.QVolIn, TUFmb.QVolOut, TUFmb.TotVolIn, TUFmb.TotVolOut, TUFmb.TotVol, TUFmb.dVol, TUFmb.VolImO
                     FROM TUFmb
                     WHERE TUFmb.simulationId = ?
                     ORDER BY TUFmb.time'''
@@ -962,7 +1083,7 @@ def updateScript(cursor, sId,sims):
     data=cursor.fetchall()
     tuftdata = list(zip(*data))
     if not tuftdata:
-        tuftdata = [[0],[0],[0],[0],[0],[0],[0],[0]]
+        tuftdata = [[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0]]
 
     cols=''
     for itemX in sims:
@@ -1014,8 +1135,13 @@ def updateScript(cursor, sId,sims):
         TUFVolChart.data.datasets[3].data = ['''+', '.join(map(str,tuftdata[5]))+'''];
         TUFVolChart.data.datasets[4].data = ['''+', '.join(map(str,tuftdata[6]))+'''];
         TUFVolChart.data.datasets[5].data = ['''+', '.join(map(str,tuftdata[7]))+'''];
+        TUFVolChart.data.datasets[6].data = ['''+', '.join(map(str,tuftdata[8]))+'''];
         TUFVolChart.data.labels = ['''+', '.join(map(str,tuftdata[0]))+''']
         TUFVolChart.update()
+        TUFdVolChart.data.datasets[0].data = ['''+', '.join(map(str,tuftdata[9]))+'''];
+        TUFdVolChart.data.datasets[1].data = ['''+', '.join(map(str,tuftdata[10]))+'''];
+        TUFdVolChart.data.labels = ['''+', '.join(map(str,tuftdata[0]))+''']
+        TUFdVolChart.update()
         TUFMBChart.data.datasets[0].data = ['''+', '.join(map(str,tuftdata[1]))+'''];
         TUFMBChart.data.labels = ['''+', '.join(map(str,tuftdata[0]))+''']
         TUFMBChart.update()
@@ -1062,15 +1188,6 @@ def gen(cursor, mId):
     html = CSS() + layout(simulations) + script + loadScript()
     print('full html generated')
     return html
-
-
-
-
-
-
-
-
-
 
 def generate_log():
     modelName = 'reptonStreet'
