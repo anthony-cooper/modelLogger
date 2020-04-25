@@ -18,7 +18,7 @@ def setup_Database(modelName, dbLoc):
     modelTableFields.append(('versionName','VARCHAR(255)'))
     modelTableFields.append(('versionNotes','TEXT'))
     modelTableFields.append(('submissionDate','TIMESTAMP'))
-    modelTableFields.append(('modelType','VARCHAR(255)'))
+    modelTableFields.append(('modelType','INTEGER')) #0 FMP, 1 TUF, 2 Linked
     modelTableFields.append(('modeller','VARCHAR(255)'))
     modelTableFields.append(('homePath','VARCHAR(255)'))
 
@@ -471,7 +471,7 @@ iefPath = r'C:\DevArea\TestModel\FM\IEF'
 versionName = 'TEST'
 versionNotes = ''
 submissionDate = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
-modelType = ''
+modelType = 2
 modeller = ''
 homePath = r'C:\DevArea\TestModel'
 
