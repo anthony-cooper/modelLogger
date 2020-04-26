@@ -697,7 +697,7 @@ def FMNonConChart():
                         },
                         scaleLabel: {
                             display: true,
-                            labelString: 'Convergence',
+                            labelString: 'Q/H RATIO',
                             fontSize: 10,
                             fontColor: 'black',
                         }
@@ -1284,6 +1284,7 @@ def updateScript(cursor, sId,sims, modelType):
 
 def fmNonConUpdate(cursor,sId):
     update = ''
+    updates=[]
     sqlCommand = '''SELECT FMNonCons.time, FMNonCons.qRatio, FMNonCons.qRatioNode
                     FROM FMNonCons
                     WHERE FMNonCons.simulationId = ?
@@ -1294,27 +1295,45 @@ def fmNonConUpdate(cursor,sId):
     hex_number ='#000000'
     dataPoints = ''
     count = 0
+    maxPoint = 0
     if data:
         for point in data:
             if point[2] != series:
                 series = point[2]
                 hex_number ='#'+ str(hex(random.randint(0,16777215)))[2:]
                 if dataPoints:
-                    update = update+'''
-                    var newDatasetQRatio'''+hex_number[1:]+''' = {
-                        label: "Q: '''+series+''' ('''+str(count)+''')",
-                        backgroundColor: "'''+hex_number+'''",
-                        borderColor: "'''+hex_number+'''",
-                        borderWidth: 0,
-                        data: ['''+dataPoints+''']
-                    }
-                    nonConConfig.data.datasets.push(newDatasetQRatio'''+hex_number[1:]+''');
-                    '''
-                    print(series + dataPoints)
+
+                    updates.append((count, hex_number[1:],series,hex_number,dataPoints, maxPoint))
                     dataPoints = ''
                     count=0
+                    maxPoint = 0
             dataPoints = dataPoints + '{x:' + str(point[0]) + ', y:' + str(point[1]) + '}, '
+            if point[1]> maxPoint:
+                maxPoint = point[1]
             count = count + 1
+
+        maxCount = sorted(updates, key=lambda student: student[0] , reverse=True)[0][0]
+        maxMaxPoint = sorted(updates, key=lambda student: student[0] , reverse=True)[0][4]
+        for item in sorted(updates, key=lambda student: student[0] , reverse=True):
+            if item[0]*10>maxCount or item[4]>maxMaxPoint:
+                hideLoad = 'false'
+            else:
+                hideLoad = 'true'
+
+            update = update + '''
+            var newDatasetQRatio'''+str(item[1])+''' = {
+                label: "Q: '''+item[2]+''' ('''+str(item[0])+''')",
+                backgroundColor: "'''+item[3]+'''",
+                borderColor: "'''+item[3]+'''",
+                borderWidth: 0,
+                hidden: '''+hideLoad+''',
+                data: ['''+item[4]+''']
+            }
+            nonConConfig.data.datasets.push(newDatasetQRatio'''+str(item[1])+''');
+            '''
+
+    updates=[]
+    maxPoint=0
     sqlCommand = '''SELECT FMNonCons.time, FMNonCons.hRatio, FMNonCons.hRatioNode
                     FROM FMNonCons
                     WHERE FMNonCons.simulationId = ?
@@ -1331,22 +1350,36 @@ def fmNonConUpdate(cursor,sId):
                 series = point[2]
                 hex_number ='#'+ str(hex(random.randint(0,16777215)))[2:]
                 if dataPoints:
-                    update = update+'''
-                    var newDatasetHRatio'''+hex_number[1:]+''' = {
-                        label: "H: '''+series+''' ('''+str(count)+''')",
-                        backgroundColor: "'''+hex_number+'''",
-                        borderColor: "'''+hex_number+'''",
-                        pointStyle: 'rect',
-                        borderWidth: 0,
-                        data: ['''+dataPoints+''']
-                    }
-                    nonConConfig.data.datasets.push(newDatasetHRatio'''+hex_number[1:]+''');
-                    '''
-                    print(series + dataPoints)
+
+                    updates.append((count, hex_number[1:],series,hex_number,dataPoints))
                     dataPoints = ''
                     count=0
+                    maxPoint=0
             dataPoints = dataPoints + '{x:' + str(point[0]) + ', y:' + str(point[1]) + '}, '
+            if point[1]> maxPoint:
+                maxPoint = point[1]
             count = count + 1
+
+        maxCount = sorted(updates, key=lambda student: student[0] , reverse=True)[0][0]
+        maxMaxPoint = sorted(updates, key=lambda student: student[0] , reverse=True)[0][4]
+        for item in sorted(updates, key=lambda student: student[0] , reverse=True):
+            if item[0]*10>maxCount or item[4]>maxMaxPoint:
+                hideLoad = 'false'
+            else:
+                hideLoad = 'true'
+
+            update = update + '''
+            var newDatasetHRatio'''+str(item[1])+''' = {
+                label: "H: '''+item[2]+''' ('''+str(item[0])+''')",
+                backgroundColor: "'''+item[3]+'''",
+                borderColor: "'''+item[3]+'''",
+                borderWidth: 0,
+                pointStyle: 'rect',
+                hidden: '''+hideLoad+''',
+                data: ['''+item[4]+''']
+            }
+            nonConConfig.data.datasets.push(newDatasetHRatio'''+str(item[1])+''');
+            '''
 
 
 
