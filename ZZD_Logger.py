@@ -109,5 +109,3 @@ def zzdTextAssessment(textBlock):
     loggedItems.append(('Flood Modeller Final State', finish))
 
     return loggedItems, nonCons
-
-print(zzdLogger(r'C:\DevArea\TestModel\FM\Results\BROOKSTRAY_[02-00_EP2020-NC]_[TOPO-B-124-5_CHAN-B-1-5_002].zzd')[1])
