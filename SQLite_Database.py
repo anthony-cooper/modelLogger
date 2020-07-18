@@ -248,13 +248,6 @@ def log_simX(db,sId,parameter,value,software):
     db.commit()
     return cursor.lastrowid
 
-def log_FMnonCon(db,sId,time,qRatio,qRatioNode,hRatio,hRatioNode,maxdq,maxdqNode,maxdh,maxdhNode):
-    cursor = db.cursor()
-    sqlCommand = 'INSERT INTO FMNonCons(simulationId,time,qRatio,qRatioNode,hRatio,hRatioNode,maxdq,maxdqNode,maxdh,maxdhNode) VALUES (?,?,?,?,?,?,?,?,?,?)'
-    cursor.execute(sqlCommand, [sId,time,qRatio,qRatioNode,hRatio,hRatioNode,maxdq,maxdqNode,maxdh,maxdhNode])
-    #db.commit() #commit all after
-    return cursor.lastrowid
-
 def log_file(db, file):
     cursor = db.cursor()
     sqlCommand = 'SELECT fId FROM files WHERE fileName  = ? AND fileExt = ? AND type = ? AND path = ? AND readInSettings = ? AND notes = ?'
@@ -404,7 +397,7 @@ def logSimulation_2_items(db,sId, inputFiles, events, scenarios, homePath):
                     log_simX(db,sId,zzdItem[0],zzdItem[1],False)
             for nonCon in zzdItems[1]:
                 log_FMnonCon(db, sId, nonCon[0], nonCon[1], nonCon[2], nonCon[3], nonCon[4], nonCon[5], nonCon[6], nonCon[7], nonCon[8])
-                db.commit()
+            db.commit() #commit zzd changes outside of loop
             print('zzd logged')
         except:
             print('zzd log failed, probably doesn\'t exist')
@@ -438,11 +431,21 @@ def logFMlf(db, sId, iefFilePath):
             values.extend(line)
             cursor.execute(sqlCommand,values)
         db.commit()
+        print('lf1 logged')
 
 
 
     except:
         print('couldn\'t log lf1, probably not found')
+
+def log_FMnonCon(db,sId,time,qRatio,qRatioNode,hRatio,hRatioNode,maxdq,maxdqNode,maxdh,maxdhNode):
+    cursor = db.cursor()
+    sqlCommand = 'INSERT INTO FMNonCons(simulationId,time,qRatio,qRatioNode,hRatio,hRatioNode,maxdq,maxdqNode,maxdh,maxdhNode) VALUES (?,?,?,?,?,?,?,?,?,?)'
+    cursor.execute(sqlCommand, [sId,time,qRatio,qRatioNode,hRatio,hRatioNode,maxdq,maxdqNode,maxdh,maxdhNode])
+    #db.commit() #commit all after
+    return cursor.lastrowid
+
+
 
 def logTUFmb(db, sId, outputFolder, tuflowSimulationName, homePath):
     try:
