@@ -146,26 +146,14 @@ def lf1Logger(lf1File):
             raise
 
     file.close
-    # items = dict.items()
-    # for item in items:
-    #     print(item)
 
     sorted_dict = sorted(dict.items())
 
-<<<<<<< HEAD
-    sorted_dict = sorted(dict.items())
-
-=======
->>>>>>> 58d50beda0eca85802207ece250d46dfe47ba7af
     for item in sorted_dict:
         loggedItems.append((item[0],item[1]['inflow'],item[1]['outflow'],item[1]['flowCon'],item[1]['qtol'],item[1]['levelCon'],item[1]['htol'],item[1]['iterations'],item[1]['maxitr'],item[1]['minitr'],item[1]['timestep'],item[1]['massError']))
 
-    print(loggedItems)
+#    print(loggedItems)
     return loggedItems
 
 
-<<<<<<< HEAD
 #lf1Logger(r'C:\DevArea\TestModel\FM\IEF\Idle_[01-00_CC00]_[__WS-A-02_019].lf1')
-=======
-lf1Logger(r'C:\DevArea\TestModel\FM\IEF\Idle_[01-00_CC00]_[__WS-A-02_019].lf1')
->>>>>>> 58d50beda0eca85802207ece250d46dfe47ba7af
