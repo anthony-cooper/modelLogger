@@ -330,7 +330,19 @@ def logSimulation_0_IEF(db,iefFilePath, mId, homePath):
     print('********** SIMULATION LOGGED **********')
 
 
-#def logSimulation_0_TCF(db,tcfPath, events, scenarios):
+def logSimulation_0_TCF(db,tcfPath, mId, homePath, events, scenarios):
+    inputs = tuflowLogger(tcfPath, homePath, events, scenarios)
+    print('any tcf files logged and events and scenarios recognised')
+    simName = genFileName(os.path.splitext(os.path.basename(tcfPath))[0],events,scenarios)
+    sId = log_sim(db, simName)
+    link_mod_sim(db, mId, sId)
+    print('simulation created simulation ID: ' + str(sId))
+
+    logSimulation_1_eventsScenarios(db, sId, inputs[1], inputs[2])
+    logSimulation_2_items(db, sId, inputs[0], inputs[1], inputs[2], homePath)
+
+    print('********** SIMULATION LOGGED **********')
+
 
 def logSimulation_1_eventsScenarios(db, sId, events, scenarios):
     optionNo = 0
@@ -463,17 +475,16 @@ def logTUFmb(db, sId, outputFolder, tuflowSimulationName, homePath):
 
 
 
-modelName = 'floodModel'
-dbLoc = r'C:\DevArea\TestDB'
+modelName = 'ammanford'
+dbLoc = r'M:\272967-05_Ammanford\Working'
 
-iefPath = r'C:\DevArea\TestModel\FM\IEF'
 
-versionName = 'TEST'
-versionNotes = ''
+versionName = '001'
+versionNotes = 'Check conversion from mi to shp and identify instabilities'
 submissionDate = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
-modelType = 2
-modeller = ''
-homePath = r'C:\DevArea\TestModel'
+modelType = '1'
+modeller = 'Anthony Cooper'
+homePath = r'M:\272967-05_Ammanford\Working'
 
 
 db = setup_Database(modelName, dbLoc)
@@ -483,7 +494,17 @@ modelDetails = [versionName,versionNotes,submissionDate,modelType,modeller,homeP
 mId = log_mod(db,modelDetails)
 print('********** MODEL CREATED **********')
 
+# iefPath = r'C:\Users\antho\Downloads\Model\Model\FloodModeller\IEF'
+# for file in os.listdir(iefPath):
+#     if os.path.splitext(file)[1].casefold() == '.ief'.casefold():
+#         logSimulation_0_IEF(db,os.path.join(iefPath,file),mId, homePath)
 
-for file in os.listdir(iefPath):
-    if os.path.splitext(file)[1].casefold() == '.ief'.casefold():
-        logSimulation_0_IEF(db,os.path.join(iefPath,file),mId, homePath)
+tcfPath = r'M:\272967-05_Ammanford\Working\Model\runs\Ammanford_[~e1~_~e2~]_[~s1~_~s2~_001].tcf'
+log = []
+#log.append([db,tcfPath,mId,homePath,['','01-00','EP2120-CE'],['','DS-ARP-01','_']])
+#log.append([db,tcfPath,mId,homePath,['','00-10','EP2020-NC'],['','DS-ARP-01','_']])
+log.append([db,tcfPath,mId,homePath,['','00-10','EP2120-CE'],['','DS-ARP-01','_']])
+log.append([db,tcfPath,mId,homePath,['','00-10','EP2120-CE'],['','EXG','_']])
+
+for file in log:
+    logSimulation_0_TCF(file[0],file[1],file[2],file[3],file[4],file[5])
