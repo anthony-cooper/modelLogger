@@ -1116,7 +1116,7 @@ def loadScript(modelType, sId1):
 
     return script
 
-def updateScript(cursor, sId,sims, modelType):
+def updateScript(cursor, sId,sims, modelType, minTimeBetweenPoints):
     FMDetTable = ''
     FMModTable = ''
     TUFDetTable = ''
@@ -1186,10 +1186,52 @@ def updateScript(cursor, sId,sims, modelType):
                         WHERE FMlf.simulationId = ?
                         ORDER BY FMlf.time'''
         cursor.execute(sqlCommand,[sId])
-        data=cursor.fetchall()
+        originalData=cursor.fetchall()
+
+        data = []
+        flowCon = 0
+        levelCon = 0
+        iterations = 0
+        previousTime = -99 #This enables time 0 (or other close to zero restart time to be plotted)
+        finalTime = originalData[len(originalData)-1][0]
+        #Set constants to plot (Use second data point due to errors at t0)
+        maxitr = originalData[1][7]
+        minitr = originalData[1][8]
+        htol = originalData[1][4]
+        qtol = originalData[1][2]
+
+
+        for point in originalData:
+            #Set maximums to plot
+            if point[1] > flowCon:
+                flowCon = point[1]
+            if point[3] > levelCon:
+                levelCon = point[3]
+            if point[9] > iterations:
+                iterations = point[9]
+
+            if point[0] >= previousTime + minTimeBetweenPoints or point[0] == finalTime:
+                #Set instants to plot
+                time = point[0]
+                inflow = point[5]
+                outflow = point[6]
+                massError = point[10]
+                data.append([time, flowCon, qtol, levelCon, htol, inflow, outflow, maxitr, minitr, iterations, massError])
+                previousTime = point[0]
+                flowCon = 0
+                levelCon = 0
+                iterations = 0
+
+        print(str(len(data))+' data points included in FM Time Plots')
         fmtdata = list(zip(*data))
         if not fmtdata:
             fmtdata = [[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0]]
+
+
+
+
+
+
 
     if modelType == 1 or modelType == 2:
 
@@ -1396,7 +1438,7 @@ def updateScript(cursor, sId,sims, modelType):
 #     return update
 
 
-def gen(cursor, mId, modelType):
+def gen(cursor, mId, modelType, minTimeBetweenPoints):
 
     sqlCommand = '''SELECT simulations.sId, simulations.simName
                     FROM simulations, models, model_simulation
@@ -1421,7 +1463,7 @@ def gen(cursor, mId, modelType):
         else:
             simulations = simulations + '''<tr id="row'''+str(item[0])+'''" onclick="show'''+str(item[0])+'''()"><td nowrap>'''+item[1]+'''</td></tr>'''
 
-        script = script + updateScript(cursor, item[0], data, modelType)
+        script = script + updateScript(cursor, item[0], data, modelType, minTimeBetweenPoints)
 
         print('generated for: '+ item[1])
 
@@ -1433,19 +1475,18 @@ def gen(cursor, mId, modelType):
     print('full html generated')
     return html
 
-def generate_log(modelName, dbLoc, modelType, mId):
+def generate_log(modelName, dbLoc, modelType, mId, minTimeBetweenPoints):
     #Open Database
     db = sqlite3.connect(os.path.join(dbLoc,modelName+'.sqlite3'))
     cursor = db.cursor()
 
-    #html=generate_header()+generate_content(cursor, mId)
-    html = gen(cursor, mId, modelType)
+    html = gen(cursor, mId, modelType, minTimeBetweenPoints)
 
     f = open(os.path.join(dbLoc,modelName+'.html'), "w")
     f.write(html)
     f.close()
 
-#generate_log('Model',r'C:\DevArea\TestDB', 2, 2)
+#generate_log('Model',r'C:\DevArea\TestDB', 2, 2, 0.025)
 # modelName = 'floodModel'
 # dbLoc = r'C:\DevArea\TestDB'
 #modelType = 2 #0 FM, 1 TUF, 2 Linked

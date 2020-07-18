@@ -36,10 +36,13 @@ simsToLog.append([r'C:\DevArea\TestModel\FM\IEF\FM_Test.ief'])
 # simsToLog.append([tcfPath,['','01-00','EP2120-CE'],['','S','_']])
 # simsToLog.append([tcfPath,['','01-00','EP2120-CE'],['','S','_']])
 
+#Set minimum time between data points in seconds - set to 0 to include all points
+minTimeBetweenPoints = 0 #seconds
+minTimeBetweenPoints = minTimeBetweenPoints/3600 #Hours
 
 
 mId = SQLite_Database.create_update_Database(modelName, dbLoc, modelType, modelDetails, simsToLog)
 print('*************************************************')
 
 print('********** SIMULATION LOGGING COMPLETE **********')
-html_ReportCreator.generate_log(modelName, dbLoc, modelType, mId)
+html_ReportCreator.generate_log(modelName, dbLoc, modelType, mId, minTimeBetweenPoints)
