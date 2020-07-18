@@ -139,8 +139,9 @@ def FMhtml():
     		<div class="chartDiv-TUFmb" ><canvas id="FMMBChart"style="width:100%;height:100%;"></canvas></div>
 
         </div>
-        <div class="chartDiv-TUFmb" ><canvas id="FMNonConChart"style="width:100%;height:100%;"></canvas></div>
-
+        '''
+        #FMhtml=FMhtml+'''<div class="chartDiv-TUFmb" ><canvas id="FMNonConChart"style="width:100%;height:100%;"></canvas></div>'''
+    FMhtml=FMhtml+'''
     </div>
     '''
     return FMhtml
@@ -609,107 +610,106 @@ def FMMBChart():
 '''
     return script
 
-def FMNonConChart():
-    script='''
-    var nonConConfig = {
-        type: 'scatter',
-        data: {
-            datasets: [
-                {
-                label: 'UNLOADED',
-                fill: true,
-                pointRadius: 3,
-                pointBorderColor: 'red',
-                pointBackgroundColor: 'red',
-                borderWidth: 1,
-                data: [{x: 1,y: 2},{x: 3,y: 4},]
-                },
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            title: {
-                    display: true,
-                    text: 'FM Non-Convergence'
-                },
-
-            tooltips: {
-                mode: 'nearest',
-                callbacks: {
-      	            title: function(tooltipItems, data) {
-                        return data.datasets[tooltipItems[0].datasetIndex].label;
-					}
-			    },
-                intersect: false,
-                titleFontSize: 10,
-                bodyFontSize: 10,
-                displayColors: false
-            },
-            layout: {
-                padding: {
-                    left: 0,
-                    right: 0,
-                    top: 0,
-                    bottom: 0
-                }
-            },
-
-            legend: {
-                display: true,
-                position: 'bottom',
-                labels: {
-                    fontSize: 10,
-                    fontColor: 'black',
-                    padding: 4
-                }
-            },
-            scales: {
-                    xAxes: [{
-                        display: true,
-                        maxRotation: 0,
-                        ticks: {
-                            maxRotation: 0,
-                            minRotation: 0,
-                            fontSize: 10,
-                            fontColor: 'black',
-                        },
-                        gridLines: {
-                            drawTicks: false
-                        },
-                        scaleLabel: {
-                            display: true,
-                            labelString: 'Time',
-                            fontSize: 10,
-                            fontColor: 'black',
-                        }
-                    }],
-                    yAxes: [{
-                        display: true,
-                        ticks: {
-                            maxRotation: 0,
-                            minRotation: 0,
-                            fontSize: 10,
-                            fontColor: 'black',
-                        },
-                        gridLines: {
-                            drawTicks: false
-                        },
-                        scaleLabel: {
-                            display: true,
-                            labelString: 'Q/H RATIO',
-                            fontSize: 10,
-                            fontColor: 'black',
-                        }
-                    }]
-                }
-        }
-    };
-    var FMNonConChart = new Chart(document.getElementById('FMNonConChart'), nonConConfig);
-
-    '''
-    return script
-
+# def FMNonConChart():
+#     script='''
+#     var nonConConfig = {
+#         type: 'scatter',
+#         data: {
+#             datasets: [
+#                 {
+#                 label: 'UNLOADED',
+#                 fill: true,
+#                 pointRadius: 3,
+#                 pointBorderColor: 'red',
+#                 pointBackgroundColor: 'red',
+#                 borderWidth: 1,
+#                 data: [{x: 1,y: 2},{x: 3,y: 4},]
+#                 },
+#             ]
+#         },
+#         options: {
+#             responsive: true,
+#             maintainAspectRatio: false,
+#             title: {
+#                     display: true,
+#                     text: 'FM Non-Convergence'
+#                 },
+#
+#             tooltips: {
+#                 mode: 'nearest',
+#                 callbacks: {
+#       	            title: function(tooltipItems, data) {
+#                         return data.datasets[tooltipItems[0].datasetIndex].label;
+# 					}
+# 			    },
+#                 intersect: false,
+#                 titleFontSize: 10,
+#                 bodyFontSize: 10,
+#                 displayColors: false
+#             },
+#             layout: {
+#                 padding: {
+#                     left: 0,
+#                     right: 0,
+#                     top: 0,
+#                     bottom: 0
+#                 }
+#             },
+#
+#             legend: {
+#                 display: true,
+#                 position: 'bottom',
+#                 labels: {
+#                     fontSize: 10,
+#                     fontColor: 'black',
+#                     padding: 4
+#                 }
+#             },
+#             scales: {
+#                     xAxes: [{
+#                         display: true,
+#                         maxRotation: 0,
+#                         ticks: {
+#                             maxRotation: 0,
+#                             minRotation: 0,
+#                             fontSize: 10,
+#                             fontColor: 'black',
+#                         },
+#                         gridLines: {
+#                             drawTicks: false
+#                         },
+#                         scaleLabel: {
+#                             display: true,
+#                             labelString: 'Time',
+#                             fontSize: 10,
+#                             fontColor: 'black',
+#                         }
+#                     }],
+#                     yAxes: [{
+#                         display: true,
+#                         ticks: {
+#                             maxRotation: 0,
+#                             minRotation: 0,
+#                             fontSize: 10,
+#                             fontColor: 'black',
+#                         },
+#                         gridLines: {
+#                             drawTicks: false
+#                         },
+#                         scaleLabel: {
+#                             display: true,
+#                             labelString: 'Q/H RATIO',
+#                             fontSize: 10,
+#                             fontColor: 'black',
+#                         }
+#                     }]
+#                 }
+#         }
+#     };
+#     var FMNonConChart = new Chart(document.getElementById('FMNonConChart'), nonConConfig);
+#
+#     '''
+#     return script
 
 def TUFVolChart():
     script = '''
@@ -963,7 +963,6 @@ def TUFdVolChart():
     '''
     return script
 
-
 def TUFMBChart():
     script='''
     var TUFMBChart = new Chart(document.getElementById('TUFMBChart'), {
@@ -1058,8 +1057,6 @@ def TUFMBChart():
     '''
     return script
 
-
-
 def layout(simulations, modelType):
     layout='''
 <div class="grid-container-base">
@@ -1104,7 +1101,7 @@ def loadScript(modelType):
         script = script + FMIOChart()
         script = script + FMItsChart()
         script = script + FMMBChart()
-        script = script + FMNonConChart()
+        #script = script + FMNonConChart()
 
     if modelType == 1 or modelType == 2:
         script = script + TUFVolChart()
@@ -1254,10 +1251,12 @@ def updateScript(cursor, sId,sims, modelType):
         FMItsChart.update()
         FMMBChart.data.datasets[0].data = ['''+', '.join(map(str,fmtdata[10]))+'''];
         FMMBChart.data.labels = ['''+', '.join(map(str,fmtdata[0]))+''']
-        FMMBChart.update()
-        nonConConfig.data.datasets.splice(0, 9999)
-		FMNonConChart.update()'''
-        script = script + fmNonConUpdate(cursor,sId)
+        FMMBChart.update()'''
+
+        # script = script+'''
+        # nonConConfig.data.datasets.splice(0, 9999)
+		# FMNonConChart.update()'''
+        #script = script + fmNonConUpdate(cursor,sId)
     if modelType == 1 or modelType == 2:
         script = script+'''
         TUFVolChart.data.datasets[0].data = ['''+', '.join(map(str,tuftdata[2]))+'''];
@@ -1282,116 +1281,116 @@ def updateScript(cursor, sId,sims, modelType):
 
     return script
 
-def fmNonConUpdate(cursor,sId):
-    update = ''
-    updates=[]
-    sqlCommand = '''SELECT FMNonCons.time, FMNonCons.qRatio, FMNonCons.qRatioNode
-                    FROM FMNonCons
-                    WHERE FMNonCons.simulationId = ?
-                    ORDER BY FMNonCons.qRatioNode'''
-    cursor.execute(sqlCommand,[sId])
-    data=cursor.fetchall()
-    series =''
-    hex_number ='#000000'
-    dataPoints = ''
-    count = 0
-    maxPoint = 0
-    if data:
-        for point in data:
-            if point[2] != series:
-                series = point[2]
-                hex_number ='#'+ str(hex(random.randint(0,16777215)))[2:]
-                if dataPoints:
-
-                    updates.append((count, hex_number[1:],series,hex_number,dataPoints, maxPoint))
-                    dataPoints = ''
-                    count=0
-                    maxPoint = 0
-            dataPoints = dataPoints + '{x:' + str(point[0]) + ', y:' + str(point[1]) + '}, '
-            if point[1]> maxPoint:
-                maxPoint = point[1]
-            count = count + 1
-
-        maxCount = sorted(updates, key=lambda student: student[0] , reverse=True)[0][0]
-        maxMaxPoint = sorted(updates, key=lambda student: student[0] , reverse=True)[0][4]
-        for item in sorted(updates, key=lambda student: student[0] , reverse=True):
-            if item[0]*10>maxCount or item[4]>maxMaxPoint:
-                hideLoad = 'false'
-            else:
-                hideLoad = 'true'
-
-            update = update + '''
-            var newDatasetQRatio'''+str(item[1])+''' = {
-                label: "Q: '''+item[2]+''' ('''+str(item[0])+''')",
-                backgroundColor: "'''+item[3]+'''",
-                borderColor: "'''+item[3]+'''",
-                borderWidth: 0,
-                hidden: '''+hideLoad+''',
-                data: ['''+item[4]+''']
-            }
-            nonConConfig.data.datasets.push(newDatasetQRatio'''+str(item[1])+''');
-            '''
-
-    updates=[]
-    maxPoint=0
-    sqlCommand = '''SELECT FMNonCons.time, FMNonCons.hRatio, FMNonCons.hRatioNode
-                    FROM FMNonCons
-                    WHERE FMNonCons.simulationId = ?
-                    ORDER BY FMNonCons.hRatioNode'''
-    cursor.execute(sqlCommand,[sId])
-    data=cursor.fetchall()
-    series =''
-    hex_number ='#000000'
-    dataPoints = ''
-    count = 0
-    if data:
-        for point in data:
-            if point[2] != series:
-                series = point[2]
-                hex_number ='#'+ str(hex(random.randint(0,16777215)))[2:]
-                if dataPoints:
-
-                    updates.append((count, hex_number[1:],series,hex_number,dataPoints))
-                    dataPoints = ''
-                    count=0
-                    maxPoint=0
-            dataPoints = dataPoints + '{x:' + str(point[0]) + ', y:' + str(point[1]) + '}, '
-            if point[1]> maxPoint:
-                maxPoint = point[1]
-            count = count + 1
-
-        maxCount = sorted(updates, key=lambda student: student[0] , reverse=True)[0][0]
-        maxMaxPoint = sorted(updates, key=lambda student: student[0] , reverse=True)[0][4]
-        for item in sorted(updates, key=lambda student: student[0] , reverse=True):
-            if item[0]*10>maxCount or item[4]>maxMaxPoint:
-                hideLoad = 'false'
-            else:
-                hideLoad = 'true'
-
-            update = update + '''
-            var newDatasetHRatio'''+str(item[1])+''' = {
-                label: "H: '''+item[2]+''' ('''+str(item[0])+''')",
-                backgroundColor: "'''+item[3]+'''",
-                borderColor: "'''+item[3]+'''",
-                borderWidth: 0,
-                pointStyle: 'rect',
-                hidden: '''+hideLoad+''',
-                data: ['''+item[4]+''']
-            }
-            nonConConfig.data.datasets.push(newDatasetHRatio'''+str(item[1])+''');
-            '''
-
-
-
-
-
-    update = update+ '''
-
-
-    FMNonConChart.update();'''
-
-
-    return update
+# def fmNonConUpdate(cursor,sId):
+#     update = ''
+#     updates=[]
+#     sqlCommand = '''SELECT FMNonCons.time, FMNonCons.qRatio, FMNonCons.qRatioNode
+#                     FROM FMNonCons
+#                     WHERE FMNonCons.simulationId = ?
+#                     ORDER BY FMNonCons.qRatioNode'''
+#     cursor.execute(sqlCommand,[sId])
+#     data=cursor.fetchall()
+#     series =''
+#     hex_number ='#000000'
+#     dataPoints = ''
+#     count = 0
+#     maxPoint = 0
+#     if data:
+#         for point in data:
+#             if point[2] != series:
+#                 series = point[2]
+#                 hex_number ='#'+ str(hex(random.randint(0,16777215)))[2:]
+#                 if dataPoints:
+#
+#                     updates.append((count, hex_number[1:],series,hex_number,dataPoints, maxPoint))
+#                     dataPoints = ''
+#                     count=0
+#                     maxPoint = 0
+#             dataPoints = dataPoints + '{x:' + str(point[0]) + ', y:' + str(point[1]) + '}, '
+#             if point[1]> maxPoint:
+#                 maxPoint = point[1]
+#             count = count + 1
+#
+#         maxCount = sorted(updates, key=lambda student: student[0] , reverse=True)[0][0]
+#         maxMaxPoint = sorted(updates, key=lambda student: student[0] , reverse=True)[0][4]
+#         for item in sorted(updates, key=lambda student: student[0] , reverse=True):
+#             if item[0]*10>maxCount or item[4]>maxMaxPoint:
+#                 hideLoad = 'false'
+#             else:
+#                 hideLoad = 'true'
+#
+#             update = update + '''
+#             var newDatasetQRatio'''+str(item[1])+''' = {
+#                 label: "Q: '''+item[2]+''' ('''+str(item[0])+''')",
+#                 backgroundColor: "'''+item[3]+'''",
+#                 borderColor: "'''+item[3]+'''",
+#                 borderWidth: 0,
+#                 hidden: '''+hideLoad+''',
+#                 data: ['''+item[4]+''']
+#             }
+#             nonConConfig.data.datasets.push(newDatasetQRatio'''+str(item[1])+''');
+#             '''
+#
+#     updates=[]
+#     maxPoint=0
+#     sqlCommand = '''SELECT FMNonCons.time, FMNonCons.hRatio, FMNonCons.hRatioNode
+#                     FROM FMNonCons
+#                     WHERE FMNonCons.simulationId = ?
+#                     ORDER BY FMNonCons.hRatioNode'''
+#     cursor.execute(sqlCommand,[sId])
+#     data=cursor.fetchall()
+#     series =''
+#     hex_number ='#000000'
+#     dataPoints = ''
+#     count = 0
+#     if data:
+#         for point in data:
+#             if point[2] != series:
+#                 series = point[2]
+#                 hex_number ='#'+ str(hex(random.randint(0,16777215)))[2:]
+#                 if dataPoints:
+#
+#                     updates.append((count, hex_number[1:],series,hex_number,dataPoints))
+#                     dataPoints = ''
+#                     count=0
+#                     maxPoint=0
+#             dataPoints = dataPoints + '{x:' + str(point[0]) + ', y:' + str(point[1]) + '}, '
+#             if point[1]> maxPoint:
+#                 maxPoint = point[1]
+#             count = count + 1
+#
+#         maxCount = sorted(updates, key=lambda student: student[0] , reverse=True)[0][0]
+#         maxMaxPoint = sorted(updates, key=lambda student: student[0] , reverse=True)[0][4]
+#         for item in sorted(updates, key=lambda student: student[0] , reverse=True):
+#             if item[0]*10>maxCount or item[4]>maxMaxPoint:
+#                 hideLoad = 'false'
+#             else:
+#                 hideLoad = 'true'
+#
+#             update = update + '''
+#             var newDatasetHRatio'''+str(item[1])+''' = {
+#                 label: "H: '''+item[2]+''' ('''+str(item[0])+''')",
+#                 backgroundColor: "'''+item[3]+'''",
+#                 borderColor: "'''+item[3]+'''",
+#                 borderWidth: 0,
+#                 pointStyle: 'rect',
+#                 hidden: '''+hideLoad+''',
+#                 data: ['''+item[4]+''']
+#             }
+#             nonConConfig.data.datasets.push(newDatasetHRatio'''+str(item[1])+''');
+#             '''
+#
+#
+#
+#
+#
+#     update = update+ '''
+#
+#
+#     FMNonConChart.update();'''
+#
+#
+#     return update
 
 
 def gen(cursor, mId, modelType):
@@ -1431,13 +1430,7 @@ def gen(cursor, mId, modelType):
     print('full html generated')
     return html
 
-def generate_log():
-    modelName = 'floodModel'
-    dbLoc = r'C:\DevArea\TestDB'
-
-    sId = 5
-    mId = 1
-    modelType = 2 #0 FM, 1 TUF, 2 Linked
+def generate_log(modelName, dbLoc, modelType, mId):
 
     #Open Database
     db = sqlite3.connect(os.path.join(dbLoc,modelName+'.sqlite3'))
@@ -1450,11 +1443,7 @@ def generate_log():
     f.write(html)
     f.close()
 
-generate_log()
+generate_log('floodModel',r'C:\DevArea\TestDB', 2, 1)
 # modelName = 'floodModel'
 # dbLoc = r'C:\DevArea\TestDB'
-#
-# db = sqlite3.connect(os.path.join(dbLoc,modelName+'.sqlite3'))
-# cursor = db.cursor()
-# sId = 1
-# genTUFmbPlot(cursor, sId)
+#modelType = 2 #0 FM, 1 TUF, 2 Linked
