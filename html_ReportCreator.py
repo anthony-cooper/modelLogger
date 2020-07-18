@@ -1443,7 +1443,7 @@ def generate_log(modelName, dbLoc, modelType, mId):
     f.write(html)
     f.close()
 
-generate_log('floodModel',r'C:\DevArea\TestDB', 2, 1)
+#generate_log('floodModel',r'C:\DevArea\TestDB', 2, 1)
 # modelName = 'floodModel'
 # dbLoc = r'C:\DevArea\TestDB'
 #modelType = 2 #0 FM, 1 TUF, 2 Linked

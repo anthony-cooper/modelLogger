@@ -255,8 +255,6 @@ def log_FMnonCon(db,sId,time,qRatio,qRatioNode,hRatio,hRatioNode,maxdq,maxdqNode
     db.commit()
     return cursor.lastrowid
 
-
-
 def log_file(db, file):
     cursor = db.cursor()
     sqlCommand = 'SELECT fId FROM files WHERE fileName  = ? AND fileExt = ? AND type = ? AND path = ? AND readInSettings = ? AND notes = ?'
@@ -329,7 +327,6 @@ def logSimulation_0_IEF(db,iefFilePath, mId, homePath):
 
     print('********** SIMULATION LOGGED **********')
 
-
 def logSimulation_0_TCF(db,tcfPath, mId, homePath, events, scenarios):
     inputs = tuflowLogger(tcfPath, homePath, events, scenarios)
     print('any tcf files logged and events and scenarios recognised')
@@ -342,7 +339,6 @@ def logSimulation_0_TCF(db,tcfPath, mId, homePath, events, scenarios):
     logSimulation_2_items(db, sId, inputs[0], inputs[1], inputs[2], homePath)
 
     print('********** SIMULATION LOGGED **********')
-
 
 def logSimulation_1_eventsScenarios(db, sId, events, scenarios):
     optionNo = 0
@@ -447,8 +443,6 @@ def logFMlf(db, sId, iefFilePath):
     except:
         print('couldn\'t log lf1, probably not found')
 
-
-
 def logTUFmb(db, sId, outputFolder, tuflowSimulationName, homePath):
     try:
         mbPath = os.path.join(homePath, outputFolder, tuflowSimulationName + '_MB.csv')
@@ -473,38 +467,18 @@ def logTUFmb(db, sId, outputFolder, tuflowSimulationName, homePath):
     except:
         print('couldn\'t log MB, probably not found')
 
+def create_update_Database(modelName, dbLoc, modelType, modelDetails, simsToLog):
+    db = setup_Database(modelName, dbLoc)
+    print('********** SET UP COMPLETE **********')
 
+    modelDetails = [versionName,versionNotes,submissionDate,modelType,modeller,homePath]
+    mId = log_mod(db,modelDetails)
+    print('********** MODEL CREATED **********')
 
-modelName = 'ammanford'
-dbLoc = r'M:\272967-05_Ammanford\Working'
-
-
-versionName = '001'
-versionNotes = 'Check conversion from mi to shp and identify instabilities'
-submissionDate = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
-modelType = '1'
-modeller = 'Anthony Cooper'
-homePath = r'M:\272967-05_Ammanford\Working'
-
-
-db = setup_Database(modelName, dbLoc)
-print('********** SET UP COMPLETE **********')
-
-modelDetails = [versionName,versionNotes,submissionDate,modelType,modeller,homePath]
-mId = log_mod(db,modelDetails)
-print('********** MODEL CREATED **********')
-
-# iefPath = r'C:\Users\antho\Downloads\Model\Model\FloodModeller\IEF'
-# for file in os.listdir(iefPath):
-#     if os.path.splitext(file)[1].casefold() == '.ief'.casefold():
-#         logSimulation_0_IEF(db,os.path.join(iefPath,file),mId, homePath)
-
-tcfPath = r'M:\272967-05_Ammanford\Working\Model\runs\Ammanford_[~e1~_~e2~]_[~s1~_~s2~_001].tcf'
-log = []
-#log.append([db,tcfPath,mId,homePath,['','01-00','EP2120-CE'],['','DS-ARP-01','_']])
-#log.append([db,tcfPath,mId,homePath,['','00-10','EP2020-NC'],['','DS-ARP-01','_']])
-log.append([db,tcfPath,mId,homePath,['','00-10','EP2120-CE'],['','DS-ARP-01','_']])
-log.append([db,tcfPath,mId,homePath,['','00-10','EP2120-CE'],['','EXG','_']])
-
-for file in log:
-    logSimulation_0_TCF(file[0],file[1],file[2],file[3],file[4],file[5])
+    if modelType = 1:
+        for sim in simsToLog:
+            logSimulation_0_TCF(db,sim[0],mId,modelDetails[5],sim[1], sim[2])
+    else:
+        for sim in simsToLog:
+            logSimulation_0_IEF(db,sim[0],mId,modelDetails[5])
+    return mId

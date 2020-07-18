@@ -156,4 +156,4 @@ def lf1Logger(lf1File):
     return loggedItems
 
 
-#lf1Logger(r'C:\DevArea\TestModel\FM\IEF\Idle_[01-00_CC00]_[__WS-A-02_019].lf1')
+#lf1Logger(r'')

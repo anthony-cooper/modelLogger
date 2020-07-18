@@ -1,49 +1,41 @@
 import os #Used for listing files in folder
 import os.path as path #Used for path commands
-from TUFLOW_Logger import tuflowLogger
-from FloodModeller_Logger import fmLogger
-from TLF_Logger import tlfLogger
-from ZZD_Logger import zzdLogger
+import SQLiteDatabase
+import html_ReportCreator
 
 
+#Key Parameters
+modelName = 'Model'
+dbLoc = r'C:\Model'
+modelType = '1'
 
-tcfFile = 'ReptonSt_[~e1~_~e2~]_[~s1~_002].tcf'
-#tcfFile = 'Simple.tcf'
-tcfPath = r'C:\Users\antho\Downloads\Model\Model\TUFLOW\Runs'
-homePath = r'C:\Users\antho\Downloads\Model\Model\TUFLOW'
-#(Optional)Provide a list of events
-events=['','01-00','CC00']
-scenarios=['','LowPlatformA']
-bcEvents = []
+#Model Details
+versionName = '001'
+versionNotes = 'Check model'
+submissionDate = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
+modeller = 'Anthony Cooper'
+homePath = r'Model'
+modelDetails = [versionName,versionNotes,submissionDate,modelType,modeller,homePath]
 
-iefFile = 'FM_Test.ief'
-iefPath = r'C:\DevArea\TestModel\FM\IEF'
+#Generate list of simulations to include
+simsToLog = []
 
-loggedItems = tuflowLogger(path.join(tcfPath,tcfFile),homePath,events,scenarios)
-for loggedItem in loggedItems[0]:
-    print(loggedItem)
-print('-------------------------')
+#Single IEF
+#simsToLog.append([r''])
 
 
+#All IEFs in a Folder
+# iefPath = r'\FloodModeller\IEF'
 # for file in os.listdir(iefPath):
-#     if path.splitext(file)[1].casefold() == '.ief'.casefold():
-#         loggedItems = fmLogger(path.join(iefPath,file),homePath)
-#
-        # for loggedItem in loggedItems[0]:
-        #     print(loggedItem)
-        # print('-------------------------')
+#     if os.path.splitext(file)[1].casefold() == '.ief'.casefold():
+#         simsToLog.append([os.path.join(iefPath,file)])
+
+#TCFs - specify event/simulations
+# tcfPath = r'TUFLOW\Model_[~e1~_~e2~]_[~s1~_~s2~_001].tcf'
+# simsToLog.append([tcfPath,['','01-00','EP2120-CE'],['','S','_']])
+# simsToLog.append([tcfPath,['','01-00','EP2120-CE'],['','S','_']])
 
 
-# tlfPath = r'C:\DevArea\TestModel\Logs\FloodModel_BASE_0100\FloodModel_BASE_0100.tlf'
-# loggedItems = tlfLogger(tlfPath)
-#
-# for loggedItem in loggedItems:
-#     print(loggedItem)
-# print('-------------------------')
-#
-# zzdPath = r'C:\DevArea\TestModel\FM\Results\FloodModel_BASE_0100.zzd'
-# loggedItems = zzdLogger(zzdPath)
-#
-# for loggedItem in loggedItems:
-#     print(loggedItem)
-# print('-------------------------')
+
+mId = SQLiteDatabase.create_update_Database(modelName, dbLoc, modelType, modelDetails, simsToLog)
+html_ReportCreator.generate_log(modelName, dbLoc, modelType, mId)
