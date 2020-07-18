@@ -1,7 +1,8 @@
 import os #Used for listing files in folder
 import os.path as path #Used for path commands
-import SQLiteDatabase
+import SQLite_Database
 import html_ReportCreator
+import datetime
 
 
 #Key Parameters
@@ -14,7 +15,7 @@ versionName = '001'
 versionNotes = 'Check model'
 submissionDate = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S")
 modeller = 'Anthony Cooper'
-homePath = r'Model'
+homePath = dbLoc
 modelDetails = [versionName,versionNotes,submissionDate,modelType,modeller,homePath]
 
 #Generate list of simulations to include
@@ -37,5 +38,5 @@ simsToLog = []
 
 
 
-mId = SQLiteDatabase.create_update_Database(modelName, dbLoc, modelType, modelDetails, simsToLog)
+mId = SQLite_Database.create_update_Database(modelName, dbLoc, modelType, modelDetails, simsToLog)
 html_ReportCreator.generate_log(modelName, dbLoc, modelType, mId)

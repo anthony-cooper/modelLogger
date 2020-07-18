@@ -252,7 +252,7 @@ def log_FMnonCon(db,sId,time,qRatio,qRatioNode,hRatio,hRatioNode,maxdq,maxdqNode
     cursor = db.cursor()
     sqlCommand = 'INSERT INTO FMNonCons(simulationId,time,qRatio,qRatioNode,hRatio,hRatioNode,maxdq,maxdqNode,maxdh,maxdhNode) VALUES (?,?,?,?,?,?,?,?,?,?)'
     cursor.execute(sqlCommand, [sId,time,qRatio,qRatioNode,hRatio,hRatioNode,maxdq,maxdqNode,maxdh,maxdhNode])
-    db.commit()
+    #db.commit() #commit all after
     return cursor.lastrowid
 
 def log_file(db, file):
@@ -404,6 +404,7 @@ def logSimulation_2_items(db,sId, inputFiles, events, scenarios, homePath):
                     log_simX(db,sId,zzdItem[0],zzdItem[1],False)
             for nonCon in zzdItems[1]:
                 log_FMnonCon(db, sId, nonCon[0], nonCon[1], nonCon[2], nonCon[3], nonCon[4], nonCon[5], nonCon[6], nonCon[7], nonCon[8])
+                db.commit()
             print('zzd logged')
         except:
             print('zzd log failed, probably doesn\'t exist')
@@ -471,11 +472,10 @@ def create_update_Database(modelName, dbLoc, modelType, modelDetails, simsToLog)
     db = setup_Database(modelName, dbLoc)
     print('********** SET UP COMPLETE **********')
 
-    modelDetails = [versionName,versionNotes,submissionDate,modelType,modeller,homePath]
     mId = log_mod(db,modelDetails)
     print('********** MODEL CREATED **********')
 
-    if modelType = 1:
+    if modelType == 1:
         for sim in simsToLog:
             logSimulation_0_TCF(db,sim[0],mId,modelDetails[5],sim[1], sim[2])
     else:
