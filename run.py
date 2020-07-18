@@ -7,8 +7,8 @@ import datetime
 
 #Key Parameters
 modelName = 'Model'
-dbLoc = r'C:\Model'
-modelType = '1'
+dbLoc = r'C:\DevArea\TestDB'
+modelType = 2
 
 #Model Details
 versionName = '001'
@@ -22,7 +22,7 @@ modelDetails = [versionName,versionNotes,submissionDate,modelType,modeller,homeP
 simsToLog = []
 
 #Single IEF
-#simsToLog.append([r''])
+simsToLog.append([r'C:\DevArea\TestModel\FM\IEF\FM_Test.ief'])
 
 
 #All IEFs in a Folder
@@ -39,4 +39,7 @@ simsToLog = []
 
 
 mId = SQLite_Database.create_update_Database(modelName, dbLoc, modelType, modelDetails, simsToLog)
+print('*************************************************')
+
+print('********** SIMULATION LOGGING COMPLETE **********')
 html_ReportCreator.generate_log(modelName, dbLoc, modelType, mId)

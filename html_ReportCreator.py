@@ -1058,6 +1058,7 @@ def TUFMBChart():
     return script
 
 def layout(simulations, modelType):
+    #print('layout')
     layout='''
 <div class="grid-container-base">
 
@@ -1076,8 +1077,10 @@ def layout(simulations, modelType):
 '''
     if modelType == 0 or modelType == 2:
         layout=layout+FMhtml()
+        #print('a')
     if modelType == 1 or modelType == 2:
         layout=layout+TUFhtml()
+        #print('b')
     layout=layout+FILhtml()
     layout=layout+'''
     </div>
@@ -1086,12 +1089,12 @@ def layout(simulations, modelType):
 
     return layout
 
-def loadScript(modelType):
+def loadScript(modelType, sId1):
     script = '''
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"></script>
 <script>
     window.onload = function show() {
-        show1()
+        show'''+str(sId1)+'''()
     }
 </script>
 
@@ -1397,12 +1400,11 @@ def gen(cursor, mId, modelType):
 
     sqlCommand = '''SELECT simulations.sId, simulations.simName
                     FROM simulations, models, model_simulation
-                    WHERE models.mId = ? AND model_simulation.modelID = model_simulation.simulationId'''
+                    WHERE models.mId = ? AND model_simulation.modelID = models.mId AND model_simulation.simulationID = simulations.sId'''
 
     cursor.execute(sqlCommand,[mId])
     data=cursor.fetchall()
-    data = data[0:1] # Only do first element
-
+    #print(data)
 
     simulations=''
 
@@ -1411,6 +1413,7 @@ def gen(cursor, mId, modelType):
 <script>
 '''
 
+    sId1 = data[0][0]
 
     for item in data:
         if item[1].count('_[') == 2:
@@ -1426,12 +1429,11 @@ def gen(cursor, mId, modelType):
 </script>
 '''
     print('************')
-    html = CSS() + layout(simulations, modelType) + script + loadScript(modelType)
+    html = CSS() + layout(simulations, modelType) + script + loadScript(modelType, sId1)
     print('full html generated')
     return html
 
 def generate_log(modelName, dbLoc, modelType, mId):
-
     #Open Database
     db = sqlite3.connect(os.path.join(dbLoc,modelName+'.sqlite3'))
     cursor = db.cursor()
@@ -1443,7 +1445,7 @@ def generate_log(modelName, dbLoc, modelType, mId):
     f.write(html)
     f.close()
 
-#generate_log('floodModel',r'C:\DevArea\TestDB', 2, 1)
+#generate_log('Model',r'C:\DevArea\TestDB', 2, 2)
 # modelName = 'floodModel'
 # dbLoc = r'C:\DevArea\TestDB'
 #modelType = 2 #0 FM, 1 TUF, 2 Linked
