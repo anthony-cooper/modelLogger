@@ -1200,27 +1200,27 @@ def updateScript(cursor, sId,sims, modelType, minTimeBetweenPoints):
         htol = originalData[1][4]
         qtol = originalData[1][2]
 
+        if originalData:
+            for point in originalData:
+                #Set maximums to plot
+                if point[1] > flowCon:
+                    flowCon = point[1]
+                if point[3] > levelCon:
+                    levelCon = point[3]
+                if point[9] > iterations:
+                    iterations = point[9]
 
-        for point in originalData:
-            #Set maximums to plot
-            if point[1] > flowCon:
-                flowCon = point[1]
-            if point[3] > levelCon:
-                levelCon = point[3]
-            if point[9] > iterations:
-                iterations = point[9]
-
-            if point[0] >= previousTime + minTimeBetweenPoints or point[0] == finalTime:
-                #Set instants to plot
-                time = point[0]
-                inflow = point[5]
-                outflow = point[6]
-                massError = point[10]
-                data.append([time, flowCon, qtol, levelCon, htol, inflow, outflow, maxitr, minitr, iterations, massError])
-                previousTime = point[0]
-                flowCon = 0
-                levelCon = 0
-                iterations = 0
+                if point[0] >= previousTime + minTimeBetweenPoints or point[0] == finalTime:
+                    #Set instants to plot
+                    time = point[0]
+                    inflow = point[5]
+                    outflow = point[6]
+                    massError = point[10]
+                    data.append([time, flowCon, qtol, levelCon, htol, inflow, outflow, maxitr, minitr, iterations, massError])
+                    previousTime = point[0]
+                    flowCon = 0
+                    levelCon = 0
+                    iterations = 0
 
         print(str(len(data))+' data points included in FM Time Plots')
         fmtdata = list(zip(*data))
